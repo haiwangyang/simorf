@@ -3,7 +3,7 @@
 A script to test if a given ORF is shorter or longer than expected by transcript shuffling method
 
 Example script:
-python simulate_by_intergenic_region.py -s human -oi "ENST00000370418.7:chr10:-|3|1863:63:90|uORF|ATG|253|1630|63|90" -esf example/ENST00000370418.7.exon_structure -cs 252 -ce 1629 -sn 100
+python simulate_by_intergenic_region.py -s human -oi "ENST00000370418.7:chr10:-|3|1863:63:90|uORF|ATG|253|1630|63|90" -esf data/exon_structure/human/ENST00000370418.7.exon_structure -cs 252 -ce 1629 -sn 100
 
 Parameter description:
 s  = species
