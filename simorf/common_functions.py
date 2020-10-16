@@ -18,3 +18,12 @@ def pickle_to_object(pkl_path):
 
 def findall(string, substring):
     return [m.start() for m in re.finditer(substring, string)]
+
+def get_A2B(filename, colKey, colValue):
+    """ get dict of A2B from tab-separated table """
+    dct = dict()
+    with open(filename, 'r') as f:
+        for line in f.readlines():
+            temp = line.rstrip().split("\t")
+            dct[temp[colKey - 1]] = temp[colValue - 1]
+    return(dct)

@@ -1,6 +1,6 @@
 """
 
-A script to test if a given ORF is shorter or longer than expected by transcript shuffling method
+A script to test if a given ORF is shorter or longer than expected by intron fetching method
 
 Example script:
 python simulate_by_intron.py -s human -oi "ENST00000370418.7:chr10:-|3|1863:63:90|uORF|ATG|253|1630|63|90" -esf example/ENST00000370418.7.exon_structure -cs 252 -ce 1629 -sn 100
@@ -13,6 +13,7 @@ cs = canonical_start
 ce = canonical_end
 sn = simulation_num
 esf= exon structure file path
+
 """
 
 __version__ = "1.0.1"
@@ -257,6 +258,7 @@ def main():
         #print("\nsim orfs with ATG:")
         #for s, e in lst:
         #    print(s, e, simulated_transcript_seq[s:e])
+
         if len(lst) > 0:
             sim_main_orf_start, sim_main_orf_end = lst[0][0], lst[0][1]
             sim_main_orf_pep_len = (sim_main_orf_end - sim_main_orf_start - 3) // 3

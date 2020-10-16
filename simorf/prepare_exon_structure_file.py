@@ -1,5 +1,4 @@
-"""
-
+""" 
 A script to generate exon structure file for certain species and transcript
 
 Example script:

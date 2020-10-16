@@ -1,6 +1,6 @@
 """
 
-A script to test if a given ORF is shorter or longer than expected by transcript shuffling method
+A script to test if a given ORF is shorter or longer than expected by intergenic region fetching method
 
 Example script:
 python simulate_by_intergenic_region.py -s human -oi "ENST00000370418.7:chr10:-|3|1863:63:90|uORF|ATG|253|1630|63|90" -esf data/exon_structure/human/ENST00000370418.7.exon_structure -cs 252 -ce 1629 -sn 100
@@ -13,6 +13,7 @@ cs = canonical_start
 ce = canonical_end
 sn = simulation_num
 esf= exon structure file path
+
 """
 
 __version__ = "1.0.1"
@@ -202,6 +203,65 @@ def get_intergenic_simulation(exons, intergenic_ids, intergenic_fasta, dct_inter
 
             whole_SIM_seq += SIM_iexonseq # concatenate simulated iexon to whole
     return whole_SIM_seq
+
+def simulation_int0(species, orf_id, exon_structure_file, canonical_start, canonical_end,  simulation_num, intergenic_fasta, intergenic_ids, dct_intergenic_GT_AG):
+    orf = Orf(species, orf_id)
+    dct_exon_structure = fetch_exon_structure(exon_structure_file)
+    exon_structure = dct_exon_structure[orf.transcript_id]
+
+    transcript =Transcript2(species, orf.transcript_id, exon_structure, canonical_start, canonical_end)
+
+
+    # distributions of three backgrounds (longest main orfs; all uorfs; all overlapping uorfs)
+    lst_sim_main_orf_pep_len = []
+    lst_sim_uorf_pep_len = []
+    lst_sim_overlapping_uorf_pep_len = []
+
+
+    for sim in range(simulation_num):
+        simulated_transcript_seq = get_intergenic_simulation(exon_structure, intergenic_ids, intergenic_fasta, dct_intergenic_GT_AG)
+
+        lst = sorted(obtain_all_orfs_in_string_with_perticular_start_codon(simulated_transcript_seq, "ATG"), key=lambda x: x[0] - x[1])
+        #print("\nsim orfs with ATG:")
+        #for s, e in lst:
+        #    print(s, e, simulated_transcript_seq[s:e])
+        if len(lst) > 0:
+            sim_main_orf_start, sim_main_orf_end = lst[0][0], lst[0][1]
+            sim_main_orf_pep_len = (sim_main_orf_end - sim_main_orf_start - 3) // 3
+            lst_sim_main_orf_pep_len.append(sim_main_orf_pep_len)
+
+            sim_5UTR_seq = simulated_transcript_seq[:sim_main_orf_start]
+            sim_main_orf_seq = simulated_transcript_seq[sim_main_orf_start:sim_main_orf_end]
+            sim_3UTR_seq = simulated_transcript_seq[sim_main_orf_end:]
+
+            if_overlapping_uorf = False
+            for s, e in lst:
+                if s < canonical_start < e:
+                    if_overlapping_uorf = True
+                    lst_sim_overlapping_uorf_pep_len.append((e - s - 3)//3)
+            if not if_overlapping_uorf:
+                lst_sim_overlapping_uorf_pep_len.append(0)
+
+            lst2 = obtain_all_orfs_in_string_with_perticular_start_codon(sim_5UTR_seq, orf.start_codon)
+            if len(lst2) > 0:
+                for s, e in lst2:
+                    lst_sim_uorf_pep_len.append((e - s - 3)//3)
+            else:
+                lst_sim_uorf_pep_len.append(0)
+        else: # if no orf were found in simulation
+            lst_sim_main_orf_pep_len.append(0)
+            lst_sim_overlapping_uorf_pep_len.append(0)
+            lst_sim_uorf_pep_len.append(0)
+
+    lst_sim_main_orf_pep_len.sort()
+    lst_sim_overlapping_uorf_pep_len.sort()
+    lst_sim_uorf_pep_len.sort()
+
+    shorter0, longer0, total0 = get_shorter_longer_fdrs(orf.pep_len, lst_sim_main_orf_pep_len)
+
+    shorter1, longer1, total1 = get_shorter_longer_fdrs(orf.pep_len, lst_sim_uorf_pep_len)
+
+    return orf.pep_len, shorter0, longer0, total0, shorter1, longer1, total1, ",".join([str(_) for _ in lst_sim_main_orf_pep_len]), ",".join([str(_) for _ in lst_sim_uorf_pep_len])
 
 ###################
 ### main script ###

@@ -83,12 +83,69 @@ class Orf:
 
     def parse_orf_id(self):
         temp = self.orf_id.split("|")
-        print(temp)
         self.transcript_id, self.chrom, self.strand = temp[0].split(":")
         self.transcript_len, self.orf_start, self.orf_end = [int(_) for _ in temp[2].split(":")]
         self.orf_type = temp[3]
         self.start_codon = temp[4]
         self.pep_len = (self.orf_end - self.orf_start - 3) // 3 
+
+def simulation_shu(species, orf_id, transcript_seq, canonical_start, canonical_end, simulation_num):
+    orf = Orf(species, orf_id)
+    transcript =Transcript(species, orf.transcript_id, transcript_seq)
+
+    # distributions of three backgrounds (longest main orfs; all uorfs; all overlapping uorfs)
+    lst_sim_main_orf_pep_len = []
+    lst_sim_uorf_pep_len = []
+    lst_sim_overlapping_uorf_pep_len = []
+
+    for sim in range(simulation_num):
+        shuffled_transcript_seq = transcript.get_shuffled_seq()
+
+        lst0 = sorted(obtain_all_orfs_in_string_with_perticular_start_codon(shuffled_transcript_seq, orf.start_codon), key=lambda x: x[0] - x[1])
+        if len(lst0) > 0:
+            lst_sim_main_orf_pep_len.append((lst0[0][1] - lst0[0][0] - 3) // 3)
+        else:
+            lst_sim_main_orf_pep_len.append(0)
+
+        lst = sorted(obtain_all_orfs_in_string_with_perticular_start_codon(shuffled_transcript_seq, "ATG"), key=lambda x: x[0] - x[1])
+        if len(lst) > 0:
+            sim_main_orf_start, sim_main_orf_end = lst[0][0], lst[0][1]
+
+            sim_5UTR_seq = shuffled_transcript_seq[:sim_main_orf_start]
+            sim_main_orf_seq = shuffled_transcript_seq[sim_main_orf_start:sim_main_orf_end]
+            sim_3UTR_seq = shuffled_transcript_seq[sim_main_orf_end:]
+
+            if_overlapping_uorf = False
+            for s, e in lst:
+                if s < canonical_start < e:
+                    if_overlapping_uorf = True
+                    lst_sim_overlapping_uorf_pep_len.append((e - s - 3)//3)
+            if not if_overlapping_uorf:
+                lst_sim_overlapping_uorf_pep_len.append(0)
+
+            lst2 = obtain_all_orfs_in_string_with_perticular_start_codon(sim_5UTR_seq, orf.start_codon)
+            if len(lst2) > 0:
+                for s, e in lst2:
+                    lst_sim_uorf_pep_len.append((e - s - 3)//3)
+            else:
+                lst_sim_uorf_pep_len.append(0)
+        else: # if no orf were found in simulation
+            lst_sim_overlapping_uorf_pep_len.append(0)
+            lst_sim_uorf_pep_len.append(0)
+
+    lst_sim_main_orf_pep_len.sort()
+    lst_sim_overlapping_uorf_pep_len.sort()
+    lst_sim_uorf_pep_len.sort()
+
+    shorter0, longer0, total0 = get_shorter_longer_fdrs(orf.pep_len, lst_sim_main_orf_pep_len)
+    fdr_s_0 = round(shorter0/total0, 3)
+    fdr_l_0 = round(longer0/total0, 3)
+
+    shorter1, longer1, total1 = get_shorter_longer_fdrs(orf.pep_len, lst_sim_uorf_pep_len)
+    fdr_s_1 = round(shorter1/total1, 3)
+    fdr_l_1 = round(longer1/total1, 3)
+    return orf.pep_len, shorter0, longer0, total0, shorter1, longer1, total1, ",".join([str(_) for _ in lst_sim_main_orf_pep_len]), ",".join([str(_) for _ in lst_sim_uorf_pep_len])
+
 
 ###################
 ### main script ###
@@ -124,17 +181,28 @@ def main():
         print("shuffled_transcript_seq:")
         shuffled_transcript_seq = transcript.get_shuffled_seq()
         print(shuffled_transcript_seq)
-    
-        print("\nsim main orf (longest AUG one):")
-        lst = sorted(obtain_all_orfs_in_string_with_perticular_start_codon(shuffled_transcript_seq, "ATG"), key=lambda x: x[0] - x[1])    
-        #print("\nsim orfs with ATG:")
-        #for s, e in lst:
-        #    print(s, e, shuffled_transcript_seq[s:e])
+   
+
+        print("\nLongest Orf with " + orf.start_codon + " in sim transcript")
+        lst0 = sorted(obtain_all_orfs_in_string_with_perticular_start_codon(shuffled_transcript_seq, orf.start_codon), key=lambda x: x[0] - x[1])
+        if len(lst0) > 0:
+            lst_sim_main_orf_pep_len.append((lst0[0][1] - lst0[0][0] - 3) // 3)
+        else:
+            lst_sim_main_orf_pep_len.append(0)
+        for s, e in lst0:
+            print(s, e, shuffled_transcript_seq[s:e])
+ 
+        if orf.start_codon != "ATG":
+            print("\nLongest Orf with the ATG in sim transcript")
+            lst = sorted(obtain_all_orfs_in_string_with_perticular_start_codon(shuffled_transcript_seq, "ATG"), key=lambda x: x[0] - x[1])    
+        else:
+            lst = lst0
+
+        for s, e in lst:
+            print(s, e, shuffled_transcript_seq[s:e])
+
         if len(lst) > 0:
             sim_main_orf_start, sim_main_orf_end = lst[0][0], lst[0][1]
-            sim_main_orf_pep_len = (sim_main_orf_end - sim_main_orf_start - 3) // 3
-            lst_sim_main_orf_pep_len.append(sim_main_orf_pep_len)
-    
             sim_5UTR_seq = shuffled_transcript_seq[:sim_main_orf_start]
             sim_main_orf_seq = shuffled_transcript_seq[sim_main_orf_start:sim_main_orf_end]
             sim_3UTR_seq = shuffled_transcript_seq[sim_main_orf_end:] 
@@ -161,7 +229,6 @@ def main():
             else:
                 lst_sim_uorf_pep_len.append(0)
         else: # if no orf were found in simulation
-            lst_sim_main_orf_pep_len.append(0)
             lst_sim_overlapping_uorf_pep_len.append(0)
             lst_sim_uorf_pep_len.append(0)
     
