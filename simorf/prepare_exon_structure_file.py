@@ -156,26 +156,26 @@ if __name__ == "__main__":
     transcript_id = args.transcript_id
 
     if not path.exists("./annotation/" + species + ".transcript.fa"):
-        print("generating transcript fasta for " + species)
+        #print("generating transcript fasta for " + species)
         generate_transcript_fa(species)
     else:
-        print("transcript fasta found for " + species)
+        #print("transcript fasta found for " + species)
 
     if not path.exists("./annotation/" + species + ".transcript.cds_range"):
-        print("generating transcript cds range for " + species)
+        #print("generating transcript cds range for " + species)
         generate_transcript_cds_range(species)
-    print("transcript cds range for " + species + " is ready")
+    #print("transcript cds range for " + species + " is ready")
     
     if not path.exists("./annotation/" + species + ".dct_exon.pickle"):
-        print("generating exon pickle for " + species)
+        #print("generating exon pickle for " + species)
         generate_dct_exon_pickle(species)
-    print("loading exon pickle for " + species)
+    #print("loading exon pickle for " + species)
     dct_exon = pickle_to_object("./annotation/" + species + ".dct_exon.pickle")
 
     if not path.exists("./annotation/" + species + ".dct_exon_structure.pickle"):
-        print("generating exon structure pickle for " + species)
+        #print("generating exon structure pickle for " + species)
         generate_dct_exon_structure_pickle(dct_exon)
-    print("loading exon structure pickle for " + species)
+    #print("loading exon structure pickle for " + species)
     dct_exon_structure = pickle_to_object("./annotation/" + species + ".dct_exon_structure.pickle")
 
     print("writing exon structure file for " + species + " " + transcript_id)

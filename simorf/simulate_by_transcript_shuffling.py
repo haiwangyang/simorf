@@ -19,6 +19,7 @@ __version__ = "1.0.1"
 __email__ = "haiwang.yang@northwestern.edu"
 
 from timeit import default_timer as timer
+from collections import Counter
 import argparse
 import random
 import re
@@ -75,6 +76,11 @@ class Transcript:
         random.shuffle(lst)
         return "".join(lst)        
 
+    def get_shuffled_seq2(self):
+        lst = list(self.transcript_seq)
+        n = len(lst)
+        return "".join([lst[random.randrange(n)] for _ in range(n)])
+        
 class Orf:
     def __init__(self, species, orf_id):
         self.species = species
@@ -99,8 +105,7 @@ def simulation_shu(species, orf_id, transcript_seq, canonical_start, canonical_e
     lst_sim_overlapping_uorf_pep_len = []
 
     for sim in range(simulation_num):
-        shuffled_transcript_seq = transcript.get_shuffled_seq()
-
+        shuffled_transcript_seq = transcript.get_shuffled_seq2()
         lst0 = sorted(obtain_all_orfs_in_string_with_perticular_start_codon(shuffled_transcript_seq, orf.start_codon), key=lambda x: x[0] - x[1])
         if len(lst0) > 0:
             lst_sim_main_orf_pep_len.append((lst0[0][1] - lst0[0][0] - 3) // 3)
@@ -180,6 +185,10 @@ def main():
         print("\n\n############ Now simulation " + str(sim) + " ############")
         print("shuffled_transcript_seq:")
         shuffled_transcript_seq = transcript.get_shuffled_seq()
+        shuffled_transcript_seq2 = transcript.get_shuffled_seq2()
+        print(Counter(shuffled_transcript_seq), Counter(shuffled_transcript_seq2))
+
+        #shuffled_transcript_seq = transcript.get_shuffled_seq2()
         print(shuffled_transcript_seq)
    
 

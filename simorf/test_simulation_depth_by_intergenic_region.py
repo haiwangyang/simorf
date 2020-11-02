@@ -16,7 +16,7 @@ intergenic_ids = list(intergenic_fasta.keys())
 dct_intergenic_GT_AG = pickle_to_object("/projects/b1080/hy/ribo/ribo/uORF_paper/annotation/" + species + ".dct_intergenic_GT_AG.pickle")
 
 for i in list(range(10,100,10)) + list(range(100,1000,100)) + list(range(1000,10001,1000)):
-    pep_len, shorter0, longer0, total0, shorter1, longer1, total1, simulations0, simulations1 = simulation_int0(species, orf_id, "data/exon_structure/human/" + transcript_id + ".exon_structure", canonical_start, canonical_end, i, intergenic_fasta, intergenic_ids, dct_intergenic_GT_AG)
+    pep_len, shorter0, longer0, total0, shorter1, longer1, total1, simulations0, simulations1 = simulation_int0(species, orf_id, "data/exon_structure/" + species + "/" + transcript_id + ".exon_structure", canonical_start, canonical_end, i, intergenic_fasta, intergenic_ids, dct_intergenic_GT_AG)
     fdr_l_0 = round(longer0/total0, 3)
     fdr_l_1 = round(longer1/total1, 3)
     print(i, fdr_l_0, fdr_l_1)
