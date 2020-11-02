@@ -158,8 +158,6 @@ if __name__ == "__main__":
     if not path.exists("./annotation/" + species + ".transcript.fa"):
         #print("generating transcript fasta for " + species)
         generate_transcript_fa(species)
-    else:
-        #print("transcript fasta found for " + species)
 
     if not path.exists("./annotation/" + species + ".transcript.cds_range"):
         #print("generating transcript cds range for " + species)
