@@ -1,5 +1,6 @@
-for f in `cat list/golub/file.list`; do
-    sbatch batch_by_int.sh human list/golub/$f output/golub/$f
+folder=human
+for f in `cat list/$folder/file.list`; do
+    sbatch batch_by_int.sh human list/$folder/$f output/$folder/$f
 done
 
 

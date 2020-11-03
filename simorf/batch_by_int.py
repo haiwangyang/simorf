@@ -83,17 +83,17 @@ if __name__ == "__main__":
                 transcript_len = int(transcript_id_to_transcript_len[transcript_id])
                 pep_len, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf, shorter_ouorf, longer_ouorf, total_ouorf = simulation_int(species, orf_id, exon_structure_file, 0, 0,  simulation_num, int_fasta, int_ids, dct_int_GT_AG)
             
-            fdr_S_all = round(shorter_all/total_all, 3)
-            fdr_L_all = round(longer_all/total_all, 3)
+            fdr_S_all = round(shorter_all/total_all, 16)
+            fdr_L_all = round(longer_all/total_all, 16)
 
-            fdr_S_main = round(shorter_main/total_main, 3)
-            fdr_L_main = round(longer_main/total_main, 3)
+            fdr_S_main = round(shorter_main/total_main, 16)
+            fdr_L_main = round(longer_main/total_main, 16)
 
-            fdr_S_uorf = round(shorter_uorf/total_uorf, 3)
-            fdr_L_uorf = round(longer_uorf/total_uorf, 3)
+            fdr_S_uorf = round(shorter_uorf/total_uorf, 16)
+            fdr_L_uorf = round(longer_uorf/total_uorf, 16)
 
-            fdr_S_ouorf = round(shorter_ouorf/total_ouorf, 3)
-            fdr_L_ouorf = round(longer_ouorf/total_ouorf, 3)
+            fdr_S_ouorf = round(shorter_ouorf/total_ouorf, 16)
+            fdr_L_ouorf = round(longer_ouorf/total_ouorf, 16)
 
             w.write("\t".join([str(_) for _ in [orf_id, orf_type, orf.pep_len, fdr_S_all, fdr_L_all, fdr_S_main, fdr_L_main, fdr_S_uorf, fdr_L_uorf, fdr_S_ouorf, fdr_L_ouorf, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf, shorter_ouorf, longer_ouorf, total_ouorf]]) + "\n")
              
