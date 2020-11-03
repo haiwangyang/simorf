@@ -212,16 +212,24 @@ def simulation_int(species, orf_id, exon_structure_file, canonical_start, canoni
 
     transcript =Transcript2(species, orf.transcript_id, exon_structure, canonical_start, canonical_end)
     # distributions of three backgrounds (longest main orfs; all uorfs; all overlapping uorfs)
-    lst_sim_main_orf_pep_len = []
-    lst_sim_uorf_pep_len = []
-    lst_sim_overlapping_uorf_pep_len = []
+
+    lst_sim_all_orf_pep_len = []          # all ORFs in simulated transcript
+    lst_sim_main_orf_pep_len = []         # main longest ORFs in simulated transcript
+    lst_sim_uorf_pep_len = []             # ORFs in simulated 5'UTR (based on longest ATG-ORFs in simulated transcript)
+    lst_sim_overlapping_uorf_pep_len = [] # span original canonical start but in simulated transcript
 
     for sim in range(simulation_num):
         simulated_transcript_seq = get_int_simulation(exon_structure, int_ids, int_fasta, dct_int_GT_AG)
         lst0 = sorted(obtain_all_orfs_in_string_with_perticular_start_codon(simulated_transcript_seq, orf.start_codon), key=lambda x: x[0] - x[1])
         if len(lst0) > 0:
+            # all
+            for _ in lst0:
+                lst_sim_all_orf_pep_len.append((_[1] - _[0] - 3) // 3)
+
+            # longest
             lst_sim_main_orf_pep_len.append((lst0[0][1] - lst0[0][0] - 3) // 3)
         else:
+            lst_sim_all_orf_pep_len.append(0)
             lst_sim_main_orf_pep_len.append(0)
 
         if orf.start_codon != "ATG": # if ORF have a different start_codon than ATG
@@ -257,15 +265,17 @@ def simulation_int(species, orf_id, exon_structure_file, canonical_start, canoni
             lst_sim_overlapping_uorf_pep_len.append(0)
             lst_sim_uorf_pep_len.append(0)
 
+    lst_sim_all_orf_pep_len.sort()
     lst_sim_main_orf_pep_len.sort()
     lst_sim_uorf_pep_len.sort()
     lst_sim_overlapping_uorf_pep_len.sort()
 
-    shorter0, longer0, total0 = get_shorter_longer_fdrs(orf.pep_len, lst_sim_main_orf_pep_len)
-    shorter1, longer1, total1 = get_shorter_longer_fdrs(orf.pep_len, lst_sim_uorf_pep_len)
-    shorter2, longer2, total2 = get_shorter_longer_fdrs(orf.pep_len, lst_sim_overlapping_uorf_pep_len)
+    shorter_all, longer_all, total_all = get_shorter_longer_fdrs(orf.pep_len, lst_sim_all_orf_pep_len)
+    shorter_main, longer_main, total_main = get_shorter_longer_fdrs(orf.pep_len, lst_sim_main_orf_pep_len)
+    shorter_uorf, longer_uorf, total_uorf = get_shorter_longer_fdrs(orf.pep_len, lst_sim_uorf_pep_len)
+    shorter_ouorf, longer_ouorf, total_ouorf = get_shorter_longer_fdrs(orf.pep_len, lst_sim_overlapping_uorf_pep_len)
 
-    return orf.pep_len, shorter0, longer0, total0, shorter1, longer1, total1, shorter2, longer2, total2
+    return orf.pep_len, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf, shorter_ouorf, longer_ouorf, total_ouorf
     #return orf.pep_len, shorter0, longer0, total0, shorter1, longer1, total1, shorter2, longer2, total2, ",".join([str(_) for _ in lst_sim_main_orf_pep_len]), ",".join([str(_) for _ in lst_sim_uorf_pep_len]), ",".join([str(_) for _ in lst_sim_overlapping_uorf_pep_len])
 
 def generate_merged_int(species, top_pos, top_num):
@@ -341,8 +351,9 @@ def main():
     transcript =Transcript2(species, orf.transcript_id, exon_structure, canonical_start, canonical_end)
 
 
-    orf.pep_len, shorter0, longer0, total0, shorter1, longer1, total1, shorter2, longer2, total2 = simulation_int(species, orf_id, exon_structure_file, canonical_start, canonical_end,  simulation_num, int_fasta, int_ids, dct_int_GT_AG)    
-    print(orf.pep_len, shorter0, longer0, total0, shorter1, longer1, total1, shorter2, longer2, total2)
+    pep_len, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf, shorter_ouorf, longer_ouorf, total_ouorf = simulation_int(species, orf_id, exon_structure_file, canonical_start, canonical_end,  simulation_num, int_fasta, int_ids, dct_int_GT_AG)    
+    print(pep_len, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf
+, shorter_ouorf, longer_ouorf, total_ouorf)
     
 if __name__ == "__main__":
     start = timer()

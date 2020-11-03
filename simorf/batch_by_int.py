@@ -58,7 +58,7 @@ if __name__ == "__main__":
     transcript_id_to_UTR3_len = get_A2B(cds_range_file, 1, 6)
 
     with open(output, "w") as w:
-        w.write("\t".join(["orf_id", "orf_type", "orf_pep_len", "FDR_S_main", "FDR_L_main", "FDR_S_uORF", "FDR_L_uORF", "FDR_S_ouORF", "FDR_L_ouORF", "shorter_main", "longer_main", "total_main", "shorter_uORF", "longer_uORF", "total_uORF", "shorter_ouORF", "longer_ouORF", "total_ouORF"]) + "\n")
+        w.write("\t".join(["orf_id", "orf_type", "orf_pep_len", "FDR_S_all", "FDR_L_all", "FDR_S_main", "FDR_L_main", "FDR_S_uORF", "FDR_L_uORF", "FDR_S_ouORF", "FDR_L_ouORF", "shorter_all", "longer_all", "total_all", "shorter_main", "longer_main", "total_main", "shorter_uORF", "longer_uORF", "total_uORF", "shorter_ouORF", "longer_ouORF", "total_ouORF"]) + "\n")
         for orf_id in get_elements(orf_list_file):
             print(orf_id)
             orf = Orf(species, orf_id)
@@ -78,19 +78,24 @@ if __name__ == "__main__":
                 canonical_start = int(transcript_id_to_canonical_start[transcript_id])
                 UTR3_len = int(transcript_id_to_UTR3_len[transcript_id])
                 canonical_end = transcript_len - UTR3_len
-                pep_len, shorter0, longer0, total0, shorter1, longer1, total1, shorter2, longer2, total2 = simulation_int(species, orf_id, exon_structure_file, canonical_start, canonical_end,  simulation_num, int_fasta, int_ids, dct_int_GT_AG)
+                pep_len, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf, shorter_ouorf, longer_ouorf, total_ouorf = simulation_int(species, orf_id, exon_structure_file, canonical_start, canonical_end,  simulation_num, int_fasta, int_ids, dct_int_GT_AG)
             else:
                 transcript_len = int(transcript_id_to_transcript_len[transcript_id])
-                pep_len, shorter0, longer0, total0, shorter1, longer1, total1, shorter2, longer2, total2 = simulation_int(species, orf_id, exon_structure_file, 0, 0,  simulation_num, int_fasta, int_ids, dct_int_GT_AG)
+                pep_len, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf, shorter_ouorf, longer_ouorf, total_ouorf = simulation_int(species, orf_id, exon_structure_file, 0, 0,  simulation_num, int_fasta, int_ids, dct_int_GT_AG)
             
-            fdr_S_0 = round(shorter0/total0, 3)
-            fdr_L_0 = round(longer0/total0, 3)
-            fdr_S_1 = round(shorter1/total1, 3)
-            fdr_L_1 = round(longer1/total1, 3)
-            fdr_S_2 = round(shorter1/total1, 3)
-            fdr_L_2 = round(longer1/total1, 3)
+            fdr_S_all = round(shorter_all/total_all, 3)
+            fdr_L_all = round(longer_all/total_all, 3)
 
-            w.write("\t".join([str(_) for _ in [orf_id, orf_type, orf.pep_len, fdr_S_0, fdr_L_0, fdr_S_1, fdr_L_1, fdr_S_2, fdr_L_2, shorter0, longer0, total0, shorter1, longer1, total1, shorter2, longer2, total2]]) + "\n")
+            fdr_S_main = round(shorter_main/total_main, 3)
+            fdr_L_main = round(longer_main/total_main, 3)
+
+            fdr_S_uorf = round(shorter_uorf/total_uorf, 3)
+            fdr_L_uorf = round(longer_uorf/total_uorf, 3)
+
+            fdr_S_ouorf = round(shorter_ouorf/total_ouorf, 3)
+            fdr_L_ouorf = round(longer_ouorf/total_ouorf, 3)
+
+            w.write("\t".join([str(_) for _ in [orf_id, orf_type, orf.pep_len, fdr_S_all, fdr_L_all, fdr_S_main, fdr_L_main, fdr_S_uorf, fdr_L_uorf, fdr_S_ouorf, fdr_L_ouorf, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf, shorter_ouorf, longer_ouorf, total_ouorf]]) + "\n")
              
 # list/golub.orf_id.list
 
