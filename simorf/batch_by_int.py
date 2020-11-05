@@ -97,5 +97,4 @@ if __name__ == "__main__":
 
             w.write("\t".join([str(_) for _ in [orf_id, orf_type, orf.pep_len, fdr_S_all, fdr_L_all, fdr_S_main, fdr_L_main, fdr_S_uorf, fdr_L_uorf, fdr_S_ouorf, fdr_L_ouorf, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf, shorter_ouorf, longer_ouorf, total_ouorf]]) + "\n")
              
-# list/golub.orf_id.list
 
