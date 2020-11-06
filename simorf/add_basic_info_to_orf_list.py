@@ -5,7 +5,7 @@ and add basic orf and transcript/gene info
 
 
 Example script:
-python add_basic_info_to_orf_list.py -s human -olf list/human.orf_id.list
+python add_basic_info_to_orf_list.py -s human -olf list/human.orf_id.list -iff output/human.intFDRs.sim1000.merged.txt -sff output/human.shuFDRs.sim1000.merged.txt -o output/human.orf_id.with_info.list
 
 Parameter description:
 s  = species
@@ -33,16 +33,32 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='please provide information')
     parser.add_argument('-s', '--species', type=str) # FDR tables
     parser.add_argument('-olf', '--orf_list_file', type=str) # orf list file
+    parser.add_argument('-iff', '--int_fdr_file', type=str) # int fdr files output/human.intFDRs.sim1000.merged.txt
+    parser.add_argument('-sff', '--shu_fdr_file', type=str) # shu fdr files output/human.shuFDRs.sim1000.merged.txt
+    parser.add_argument('-o', '--output', type=str) # output
 
     args = parser.parse_args()
     species = args.species
     orf_list_file = args.orf_list_file
+    int_fdr_file = args.int_fdr_file
+    shu_fdr_file = args.shu_fdr_file
+    output = args.output
 
     gene_type_to_gene_classification = get_A2B("annotation/all_gene_type_to_classfication.txt", 1, 2)
     cds_range_file = "annotation/" + species + ".transcript.cds_range"
     transcript_id_to_UTR5_len = get_A2B(cds_range_file, 1, 4)
     transcript_id_to_CDS_len = get_A2B(cds_range_file, 1, 5)
     transcript_id_to_UTR3_len = get_A2B(cds_range_file, 1, 6)
+
+    orf_id_to_int_FDR_L_all = get_A2B(int_fdr_file,  1, 5)
+    orf_id_to_int_FDR_L_main = get_A2B(int_fdr_file,  1, 7)
+    orf_id_to_int_FDR_L_uORF = get_A2B(int_fdr_file,  1, 9)
+    orf_id_to_int_FDR_L_ouORF = get_A2B(int_fdr_file,  1, 11)
+
+    orf_id_to_shu_FDR_L_all = get_A2B(shu_fdr_file,  1, 5)
+    orf_id_to_shu_FDR_L_main = get_A2B(shu_fdr_file,  1, 7)
+    orf_id_to_shu_FDR_L_uORF = get_A2B(shu_fdr_file,  1, 9)
+    orf_id_to_shu_FDR_L_ouORF = get_A2B(shu_fdr_file,  1, 11)
 
     transcript_id_to_gene_id = {}
     gene_id_to_gene_classification = {}
@@ -70,10 +86,20 @@ if __name__ == "__main__":
                     transcript_id_to_gene_id[transcript_id] = gene_id
                     
     orf_list = get_elements(orf_list_file)
-    with open(orf_list_file.replace(".list", ".with_info.list"), "w") as w:
-        w.write("\t".join(["orf_id", "orf_type", "orf_classification", "orf_start_codon", "orf_pep_len", "transcript_id", "transcript_len", "UTR5_len", "canonical_len", "UTR3_len", "gene_id", "gene_name", "gene_type", "gene_classification"]) + "\n") 
+    with open(output, "w") as w:
+        w.write("\t".join(["orf_id", "orf_type", "orf_classification", "orf_start_codon", "orf_pep_len", "int_FDR_L_all", "int_FDR_L_main", "int_FDR_L_uORF", "int_FDR_L_ouORF", "shu_FDR_L_all", "shu_FDR_L_main", "shu_FDR_L_uORF", "shu_FDR_L_ouORF", "transcript_id", "transcript_len", "UTR5_len", "canonical_len", "UTR3_len", "gene_id", "gene_name", "gene_type", "gene_classification"]) + "\n") 
         for orf_id in orf_list:
             orf = Orf(species, orf_id)
+            int_FDR_L_all = orf_id_to_int_FDR_L_all[orf_id]
+            int_FDR_L_main = orf_id_to_int_FDR_L_main[orf_id]
+            int_FDR_L_uORF = orf_id_to_int_FDR_L_uORF[orf_id]
+            int_FDR_L_ouORF = orf_id_to_int_FDR_L_ouORF[orf_id]
+
+            shu_FDR_L_all = orf_id_to_shu_FDR_L_all[orf_id]
+            shu_FDR_L_main = orf_id_to_shu_FDR_L_main[orf_id]
+            shu_FDR_L_uORF = orf_id_to_shu_FDR_L_uORF[orf_id]
+            shu_FDR_L_ouORF = orf_id_to_shu_FDR_L_ouORF[orf_id]
+
             transcript_id = orf.transcript_id
             UTR5_len = transcript_id_to_UTR5_len[transcript_id]
             CDS_len = transcript_id_to_CDS_len[transcript_id]
@@ -88,5 +114,5 @@ if __name__ == "__main__":
                 orf_classification = "lncRNA"
             elif gene_classification == "pseudogene":
                 orf_classification = "pseudogene"
-            lst_to_print = [orf_id, orf.orf_type, orf_classification, orf.start_codon, orf.pep_len, transcript_id, orf.transcript_len, UTR5_len, CDS_len, UTR3_len, gene_id, gene_name, gene_type, gene_classification]
+            lst_to_print = [orf_id, orf.orf_type, orf_classification, orf.start_codon, orf.pep_len, int_FDR_L_all, int_FDR_L_main, int_FDR_L_uORF, int_FDR_L_ouORF, shu_FDR_L_all, shu_FDR_L_main, shu_FDR_L_uORF, shu_FDR_L_ouORF, transcript_id, orf.transcript_len, UTR5_len, CDS_len, UTR3_len, gene_id, gene_name, gene_type, gene_classification]
             w.write("\t".join([str(_) for _ in lst_to_print]) + "\n")
