@@ -3,6 +3,11 @@ A script to generate exon structure file for certain species and transcript
 
 Example script:
 python prepare_exon_structure_file.py -s human -ti ENST00000370418.7
+python prepare_exon_structure_file.py -s mouse -ti ENSMUST00000183805
+python prepare_exon_structure_file.py -s zebrafish -ti ENSDART00000177727
+python prepare_exon_structure_file.py -s worm -ti K09C6.2e.2
+python prepare_exon_structure_file.py -s arabidopsis -ti AT1G02640.1
+python prepare_exon_structure_file.py -s yeast -ti YGR177C
 
 Parameter description:
 s  = species

@@ -3,14 +3,18 @@
 #SBATCH -p genomics
 #SBATCH -N 1
 #SBATCH -n 1
-#SBATCH -t 10:00:00
+#SBATCH --mem=90000
+#SBATCH -t 48:00:00
 #SBTTCH --job-name="hw"
 
 cd /projects/b1080/hy/simorf/simorf/
 
 s=$1   # species
 olf=$2 # list/golub/xaa 
-o=$3   # output/golub/xaa
+sn=$3
+tp=$4
+tn=$5
+o=$6   # output/golub/xaa
 
-python batch_by_random_int.py -s human -olf $olf -sn 1000 -tp 100 -tn 1000 -o $o
+python batch_by_random_int.py -s $s -olf $olf -sn $sn -tp $tp -tn $tn -o $o
 

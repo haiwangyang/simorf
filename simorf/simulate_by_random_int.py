@@ -61,7 +61,6 @@ def obtain_all_orfs_in_string_with_perticular_start_codon(string, start_codon):
                 break
     return(lst)
 
-
 def get_shorter_longer_fdrs(len_pep, lst_sim):
     shorter_than_count = 0
     for i in lst_sim:
@@ -278,34 +277,109 @@ def simulation_int(species, orf_id, exon_structure_file, canonical_start, canoni
     return orf.pep_len, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf, shorter_ouorf, longer_ouorf, total_ouorf
     #return orf.pep_len, shorter0, longer0, total0, shorter1, longer1, total1, shorter2, longer2, total2, ",".join([str(_) for _ in lst_sim_main_orf_pep_len]), ",".join([str(_) for _ in lst_sim_uorf_pep_len]), ",".join([str(_) for _ in lst_sim_overlapping_uorf_pep_len])
 
+def example_int(species, orf_id, exon_structure_file, canonical_start, canonical_end,  simulation_num, int_fasta, int_ids, dct_int_GT_AG):
+    orf = Orf(species, orf_id)
+    dct_exon_structure = fetch_exon_structure(exon_structure_file)
+    exon_structure = dct_exon_structure[orf.transcript_id]
+
+    transcript =Transcript2(species, orf.transcript_id, exon_structure, canonical_start, canonical_end)
+    # distributions of three backgrounds (longest main orfs; all uorfs; all overlapping uorfs)
+
+    lst_sim_all_orf_pep_len = []          # all ORFs in simulated transcript
+    lst_sim_main_orf_pep_len = []         # main longest ORFs in simulated transcript
+    lst_sim_uorf_pep_len = []             # ORFs in simulated 5'UTR (based on longest ATG-ORFs in simulated transcript)
+    lst_sim_overlapping_uorf_pep_len = [] # span original canonical start but in simulated transcript
+
+    lst_sim_all_orf_cds = []          # all ORFs in simulated transcript
+    lst_sim_main_orf_cds = []         # main longest ORFs in simulated transcript
+    lst_sim_uorf_cds = []             # ORFs in simulated 5'UTR (based on longest ATG-ORFs in simulated transcript)
+    lst_sim_overlapping_uorf_cds = [] # span original canonical start but in simulated transcript
+
+    for sim in range(simulation_num):
+        simulated_transcript_seq = get_int_simulation(exon_structure, int_ids, int_fasta, dct_int_GT_AG)
+        lst0 = sorted(obtain_all_orfs_in_string_with_perticular_start_codon(simulated_transcript_seq, orf.start_codon), key=lambda x: x[0] - x[1])
+        if len(lst0) > 0:
+            # all
+            for _ in lst0:
+                lst_sim_all_orf_pep_len.append((_[1] - _[0] - 3) // 3)
+                lst_sim_all_orf_cds.append(simulated_transcript_seq[_[0]:_[1]])
+
+            # longest
+            lst_sim_main_orf_pep_len.append((lst0[0][1] - lst0[0][0] - 3) // 3)
+            lst_sim_main_orf_cds.append(simulated_transcript_seq[lst0[0][0]:lst0[0][1]])
+        else:
+            lst_sim_all_orf_pep_len.append(0)
+            lst_sim_main_orf_pep_len.append(0)
+
+        if orf.start_codon != "ATG": # if ORF have a different start_codon than ATG
+            lst = sorted(obtain_all_orfs_in_string_with_perticular_start_codon(simulated_transcript_seq, "ATG"), key=lambda x: x[0] - x[1])
+        else:
+            lst = lst0
+
+        if len(lst) > 0:
+            sim_main_orf_start, sim_main_orf_end = lst[0][0], lst[0][1]
+            #sim_main_orf_pep_len = (sim_main_orf_end - sim_main_orf_start - 3) // 3
+            #lst_sim_main_orf_pep_len.append(sim_main_orf_pep_len)
+            
+
+            sim_5UTR_seq = simulated_transcript_seq[:sim_main_orf_start]
+            sim_main_orf_seq = simulated_transcript_seq[sim_main_orf_start:sim_main_orf_end]
+            sim_3UTR_seq = simulated_transcript_seq[sim_main_orf_end:]
+
+            if_overlapping_uorf = False
+            for s, e in lst0:
+                if s < canonical_start < e:
+                    if_overlapping_uorf = True
+                    lst_sim_overlapping_uorf_pep_len.append((e - s - 3)//3)
+                    lst_sim_overlapping_uorf_cds.append(simulated_transcript_seq[s:e])
+            if not if_overlapping_uorf:
+                lst_sim_overlapping_uorf_pep_len.append(0)
+
+            lst2 = obtain_all_orfs_in_string_with_perticular_start_codon(sim_5UTR_seq, orf.start_codon)
+            if len(lst2) > 0:
+                for s, e in lst2:
+                    lst_sim_uorf_pep_len.append((e - s - 3)//3)
+                    lst_sim_uorf_cds.append(simulated_transcript_seq[s:e])
+            else:
+                lst_sim_uorf_pep_len.append(0)
+        else: # if no orf were found in simulation
+            lst_sim_main_orf_pep_len.append(0)
+            lst_sim_overlapping_uorf_pep_len.append(0)
+            lst_sim_uorf_pep_len.append(0)
+
+    return lst_sim_all_orf_cds, lst_sim_main_orf_cds, lst_sim_uorf_cds, lst_sim_overlapping_uorf_cds
+
 def generate_merged_int(species, top_pos, top_num):
     """ generate a small set of intergenic and intron mixed data to boost simulation speed """
-    half_top_num = top_num//2
-    intergenic_fasta = Fasta("./data/intergenic/" + species + ".annotation.intergenic.fa")
-    intergenic_ids = list(intergenic_fasta.keys())
-    intron_fasta = Fasta("./data/intron/" + species + ".annotation.intron.fa")
-    intron_ids = list(intron_fasta.keys())
+    if species != "yeast":
+        half_top_num = top_num//2
+        intergenic_fasta = Fasta("./data/intergenic/" + species + ".annotation.intergenic.fa")
+        intergenic_ids = list(intergenic_fasta.keys())
+        intron_fasta = Fasta("./data/intron/" + species + ".annotation.intron.fa")
+        intron_ids = list(intron_fasta.keys())
 
-    longest_intergenic_ids = sorted(intergenic_ids, key=lambda x: -len(intergenic_fasta[x]))[top_pos:(top_pos+half_top_num)]
-    longest_intron_ids = sorted(intron_ids, key=lambda x: -len(intron_fasta[x]))[top_pos:(top_pos+half_top_num)]
-    longest_int_ids = longest_intergenic_ids + longest_intron_ids
+        longest_intergenic_ids = sorted(intergenic_ids, key=lambda x: -len(intergenic_fasta[x]))[top_pos:(top_pos+half_top_num)]
+        longest_intron_ids = sorted(intron_ids, key=lambda x: -len(intron_fasta[x]))[top_pos:(top_pos+half_top_num)]
+        longest_int_ids = longest_intergenic_ids + longest_intron_ids
 
-    with open("./data/int/" + species + ".annotation.int.from" + str(top_pos) + "top" + str(top_num) + ".fa", "w") as w:
+        with open("./data/int/" + species + ".annotation.int.from" + str(top_pos) + "top" + str(top_num) + ".fa", "w") as w:
+            for intergenic_id in longest_intergenic_ids:
+                w.write(">" + intergenic_id + "\n" + str(intergenic_fasta[intergenic_id]) + "\n")
+            for intron_id in longest_intron_ids:
+                w.write(">" + intron_id + "\n" + str(intron_fasta[intron_id]) + "\n")
+
+        dct_intergenic_GT_AG = pickle_to_object("/projects/b1080/hy/simorf/simorf/data/intergenic/" + species + ".dct_intergenic_GT_AG.pickle")
+        dct_intron_GT_AG = pickle_to_object("/projects/b1080/hy/simorf/simorf/data/intron/" + species + ".dct_intron_GT_AG.pickle")
+        dct_longest_int_GT_AG = {}
         for intergenic_id in longest_intergenic_ids:
-            w.write(">" + intergenic_id + "\n" + str(intergenic_fasta[intergenic_id]) + "\n")
+            dct_longest_int_GT_AG[intergenic_id] = dct_intergenic_GT_AG[intergenic_id]
         for intron_id in longest_intron_ids:
-            w.write(">" + intron_id + "\n" + str(intron_fasta[intron_id]) + "\n")
+            dct_longest_int_GT_AG[intron_id] = dct_intron_GT_AG[intron_id]
 
-    dct_intergenic_GT_AG = pickle_to_object("/projects/b1080/hy/simorf/simorf/data/intergenic/" + species + ".dct_intergenic_GT_AG.pickle")
-    dct_intron_GT_AG = pickle_to_object("/projects/b1080/hy/simorf/simorf/data/intron/" + species + ".dct_intron_GT_AG.pickle")
-    dct_longest_int_GT_AG = {}
-    for intergenic_id in longest_intergenic_ids:
-        dct_longest_int_GT_AG[intergenic_id] = dct_intergenic_GT_AG[intergenic_id]
-    for intron_id in longest_intron_ids:
-        dct_longest_int_GT_AG[intron_id] = dct_intron_GT_AG[intron_id]
-
-    object_to_pickle(dct_longest_int_GT_AG, "/projects/b1080/hy/simorf/simorf/data/int/" + species + ".dct_int_GT_AG.from" + str(top_pos) + "top" + str(top_num) + ".pickle")
-
+        object_to_pickle(dct_longest_int_GT_AG, "/projects/b1080/hy/simorf/simorf/data/int/" + species + ".dct_int_GT_AG.from" + str(top_pos) + "top" + str(top_num) + ".pickle")
+    else:
+        os.system("cp ./data/intergenic/" + species + ".annotation.intergenic.fa ./data/int/" + species + ".annotation.int.from" + str(top_pos) + "top" + str(top_num) + ".fa")
+        os.system("cp /projects/b1080/hy/simorf/simorf/data/intergenic/" + species + ".dct_intergenic_GT_AG.pickle ./data/int/" + species + ".dct_int_GT_AG.from" + str(top_pos) + "top" + str(top_num) + ".pickle")
 
 ###################
 ### main script ###
