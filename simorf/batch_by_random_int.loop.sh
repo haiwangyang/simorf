@@ -1,4 +1,4 @@
-folder=human
+folder=human_int
 for f in `cat list/$folder/file.list`; do
     sbatch batch_by_random_int.sh human list/$folder/$f 2000 100 1000 output/$folder/$f
 done

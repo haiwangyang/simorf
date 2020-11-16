@@ -238,15 +238,15 @@ def simulation_int(species, orf_id, exon_structure_file, canonical_start, canoni
 
         if len(lst) > 0:
             sim_main_orf_start, sim_main_orf_end = lst[0][0], lst[0][1]
-            sim_main_orf_pep_len = (sim_main_orf_end - sim_main_orf_start - 3) // 3
-            lst_sim_main_orf_pep_len.append(sim_main_orf_pep_len)
+            #sim_main_orf_pep_len = (sim_main_orf_end - sim_main_orf_start - 3) // 3
+            #lst_sim_main_orf_pep_len.append(sim_main_orf_pep_len)
 
             sim_5UTR_seq = simulated_transcript_seq[:sim_main_orf_start]
             sim_main_orf_seq = simulated_transcript_seq[sim_main_orf_start:sim_main_orf_end]
             sim_3UTR_seq = simulated_transcript_seq[sim_main_orf_end:]
 
             if_overlapping_uorf = False
-            for s, e in lst:
+            for s, e in lst0:
                 if s < canonical_start < e:
                     if_overlapping_uorf = True
                     lst_sim_overlapping_uorf_pep_len.append((e - s - 3)//3)
@@ -339,7 +339,7 @@ def example_int(species, orf_id, exon_structure_file, canonical_start, canonical
             if len(lst2) > 0:
                 for s, e in lst2:
                     lst_sim_uorf_pep_len.append((e - s - 3)//3)
-                    lst_sim_uorf_cds.append(simulated_transcript_seq[s:e])
+                    lst_sim_uorf_cds.append(sim_5UTR_seq[s:e])
             else:
                 lst_sim_uorf_pep_len.append(0)
         else: # if no orf were found in simulation
@@ -347,7 +347,12 @@ def example_int(species, orf_id, exon_structure_file, canonical_start, canonical
             lst_sim_overlapping_uorf_pep_len.append(0)
             lst_sim_uorf_pep_len.append(0)
 
-    return lst_sim_all_orf_cds, lst_sim_main_orf_cds, lst_sim_uorf_cds, lst_sim_overlapping_uorf_cds
+    lst_sim_all_orf_pep_len.sort()
+    lst_sim_main_orf_pep_len.sort()
+    lst_sim_uorf_pep_len.sort()
+    lst_sim_overlapping_uorf_pep_len.sort()
+
+    return lst_sim_all_orf_cds, lst_sim_main_orf_cds, lst_sim_uorf_cds, lst_sim_overlapping_uorf_cds, lst_sim_all_orf_pep_len, lst_sim_main_orf_pep_len, lst_sim_uorf_pep_len, lst_sim_overlapping_uorf_pep_len
 
 def generate_merged_int(species, top_pos, top_num):
     """ generate a small set of intergenic and intron mixed data to boost simulation speed """

@@ -5,7 +5,7 @@ and add basic orf and transcript/gene info
 
 
 Example script:
-python add_basic_info_to_orf_list.py -s human -olf list/human.orf_id.list -iff output/backup/human.intFDRs.sim2000.txt -sff output/backup/human.shuFDRs.sim2000.txt -o output/human.FDRs.with_info.txt
+python add_info_to_human_orf_list.py -s human -olf list/human.orf_id.list -iff output/human.intFDRs.sim2000.txt -sff output/human.shuFDRs.sim2000.txt -o output/human.FDRs.with_info.txt
 
 Parameter description:
 s  = species

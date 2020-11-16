@@ -1,6 +1,6 @@
 folder=human_shu
 for f in `cat list/$folder/file.list`; do
-    sbatch batch_by_trans_shuffling.sh human list/$folder/$f output/$folder/$f
+    sbatch batch_by_trans_shuffling.sh human list/$folder/$f 2000 output/$folder/$f
 done
 
 folder=mouse_shu

@@ -125,15 +125,15 @@ def simulation_shu(species, orf_id, transcript_seq, canonical_start, canonical_e
 
         if len(lst) > 0:
             sim_main_orf_start, sim_main_orf_end = lst[0][0], lst[0][1]
-            sim_main_orf_pep_len = (sim_main_orf_end - sim_main_orf_start - 3) // 3
-            lst_sim_main_orf_pep_len.append(sim_main_orf_pep_len)
+            #sim_main_orf_pep_len = (sim_main_orf_end - sim_main_orf_start - 3) // 3
+            #lst_sim_main_orf_pep_len.append(sim_main_orf_pep_len)
 
             sim_5UTR_seq = shuffled_transcript_seq[:sim_main_orf_start]
             sim_main_orf_seq = shuffled_transcript_seq[sim_main_orf_start:sim_main_orf_end]
             sim_3UTR_seq = shuffled_transcript_seq[sim_main_orf_end:]
 
             if_overlapping_uorf = False
-            for s, e in lst:
+            for s, e in lst0:
                 if s < canonical_start < e:
                     if_overlapping_uorf = True
                     lst_sim_overlapping_uorf_pep_len.append((e - s - 3)//3)
@@ -168,6 +168,78 @@ def simulation_shu(species, orf_id, transcript_seq, canonical_start, canonical_e
 
     return orf.pep_len, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf, shorter_ouorf, longer_ouorf, total_ouorf
 
+
+
+def example_shu(species, orf_id, transcript_seq, canonical_start, canonical_end, simulation_num):
+    orf = Orf(species, orf_id)
+    transcript =Transcript(species, orf.transcript_id, transcript_seq)
+
+    # distributions of three backgrounds (longest main orfs; all uorfs; all overlapping uorfs)
+    lst_sim_all_orf_pep_len = []          # all ORFs in simulated transcript
+    lst_sim_main_orf_pep_len = []         # main longest ORFs in simulated transcript
+    lst_sim_uorf_pep_len = []             # ORFs in simulated 5'UTR (based on longest ATG-ORFs in simulated transcript)
+    lst_sim_overlapping_uorf_pep_len = [] # span original canonical start but in simulated transcript
+
+    lst_sim_all_orf_cds = []          # all ORFs in simulated transcript
+    lst_sim_main_orf_cds = []         # main longest ORFs in simulated transcript
+    lst_sim_uorf_cds = []             # ORFs in simulated 5'UTR (based on longest ATG-ORFs in simulated transcript)
+    lst_sim_overlapping_uorf_cds = [] # span original canonical start but in simulated transcript
+
+    for sim in range(simulation_num):
+        shuffled_transcript_seq = transcript.get_shuffled_seq2()
+        lst0 = sorted(obtain_all_orfs_in_string_with_perticular_start_codon(shuffled_transcript_seq, orf.start_codon), key=lambda x: x[0] - x[1])
+        if len(lst0) > 0:
+            for _ in lst0:
+                lst_sim_all_orf_pep_len.append((_[1] - _[0] - 3) // 3)
+                lst_sim_all_orf_cds.append(shuffled_transcript_seq[_[0]:_[1]])
+            # longest
+            lst_sim_main_orf_pep_len.append((lst0[0][1] - lst0[0][0] - 3) // 3)
+            lst_sim_main_orf_cds.append(shuffled_transcript_seq[lst0[0][0]:lst0[0][1]])
+        else:
+            lst_sim_all_orf_pep_len.append(0)
+            lst_sim_main_orf_pep_len.append(0)
+
+        if orf.start_codon != "ATG": # if ORF have a different start_codon than ATG
+             lst = sorted(obtain_all_orfs_in_string_with_perticular_start_codon(shuffled_transcript_seq, "ATG"), key=lambda x: x[0] - x[1])
+        else:
+            lst = lst0
+
+        if len(lst) > 0:
+            sim_main_orf_start, sim_main_orf_end = lst[0][0], lst[0][1]
+            #sim_main_orf_pep_len = (sim_main_orf_end - sim_main_orf_start - 3) // 3
+            #lst_sim_main_orf_pep_len.append(sim_main_orf_pep_len)
+
+            sim_5UTR_seq = shuffled_transcript_seq[:sim_main_orf_start]
+            sim_main_orf_seq = shuffled_transcript_seq[sim_main_orf_start:sim_main_orf_end]
+            sim_3UTR_seq = shuffled_transcript_seq[sim_main_orf_end:]
+
+            if_overlapping_uorf = False
+            for s, e in lst0:
+                if s < canonical_start < e:
+                    if_overlapping_uorf = True
+                    lst_sim_overlapping_uorf_pep_len.append((e - s - 3)//3)
+                    lst_sim_overlapping_uorf_cds.append(shuffled_transcript_seq[s:e])
+            if not if_overlapping_uorf:
+                lst_sim_overlapping_uorf_pep_len.append(0)
+
+            lst2 = obtain_all_orfs_in_string_with_perticular_start_codon(sim_5UTR_seq, orf.start_codon)
+            if len(lst2) > 0:
+                for s, e in lst2:
+                    lst_sim_uorf_pep_len.append((e - s - 3)//3)
+                    lst_sim_uorf_cds.append(sim_5UTR_seq[s:e])
+            else:
+                lst_sim_uorf_pep_len.append(0)
+        else: # if no orf were found in simulation
+            lst_sim_main_orf_pep_len.append(0)
+            lst_sim_overlapping_uorf_pep_len.append(0)
+            lst_sim_uorf_pep_len.append(0)
+
+    lst_sim_all_orf_pep_len.sort()
+    lst_sim_main_orf_pep_len.sort()
+    lst_sim_uorf_pep_len.sort()
+    lst_sim_overlapping_uorf_pep_len.sort()
+
+    return lst_sim_all_orf_cds, lst_sim_main_orf_cds, lst_sim_uorf_cds, lst_sim_overlapping_uorf_cds, lst_sim_all_orf_pep_len, lst_sim_main_orf_pep_len, lst_sim_uorf_pep_len, lst_sim_overlapping_uorf_pep_len
 
 ###################
 ### main script ###
