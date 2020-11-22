@@ -16,6 +16,8 @@ class Orf:
         temp = self.orf_id.split("|")
         self.transcript_id, self.chrom, self.strand = temp[0].split(":")
         self.transcript_len, self.orf_start, self.orf_end = [int(_) for _ in temp[2].split(":")]
+        self.orf_start -= 1 # convert to 0 based
+        self.orf_end -= 1   # convert to 0 based
         self.orf_type = temp[3]
         self.start_codon = temp[4]
         self.pep_len = (self.orf_end - self.orf_start - 3) // 3
