@@ -3,7 +3,7 @@
 A script to batch test ORFs by int random fetching method
 
 Example script:
-python -i batch_by_random_int.py -s human -olf list/golub/xaa -sn 1000 -tp 100 -tn 1000 -o output/golub/xaa
+python -i batch_by_random_trans.py -s human -olf list/golub/xaa -sn 2000 -o output/golub/xaa
 
 Parameter description:
 s  = species
@@ -17,7 +17,7 @@ __email__ = "haiwang.yang@northwestern.edu"
 
 from timeit import default_timer as timer
 from common_functions import Orf, Transcript2, get_elements, get_A2B, object_to_pickle, pickle_to_object
-from simulate_by_random_int import simulation_int, generate_merged_int, fetch_exon_structure
+from simulate_by_random_trans import simulation_trans, fetch_exon_structure
 import subprocess
 import argparse
 import random
@@ -46,11 +46,9 @@ if __name__ == "__main__":
     top_num = args.top_num
     output = args.output
 
-    if not os.path.exists("/projects/b1080/hy/simorf/simorf/data/int/" + species + ".dct_int_GT_AG.from" + str(top_pos) + "top" + str(top_num) + ".pickle"):
-        generate_merged_int(species, top_pos, top_num)
-    int_fasta = Fasta("./data/int/" + species + ".annotation.int.from" + str(top_pos) + "top" + str(top_num) + ".fa")
-    int_ids = list(int_fasta.keys())
-    dct_int_GT_AG = pickle_to_object("/projects/b1080/hy/simorf/simorf/data/int/" + species + ".dct_int_GT_AG.from" + str(top_pos) + "top" + str(top_num) + ".pickle")
+    s_fasta = Fasta("./data/trans/" + species + ".shuffled_concatenated_transcript.fa")
+    s_ids = list(s_fasta.keys())
+    dct_trans_GT_AG = pickle_to_object("data/trans/" + species + ".dct_trans_GT_AG.pickle")
 
     cds_range_file = "annotation/" + species + ".transcript.cds_range"
     transcript_id_to_transcript_len = get_A2B(cds_range_file, 1, 3)
@@ -78,10 +76,10 @@ if __name__ == "__main__":
                 canonical_start = int(transcript_id_to_canonical_start[transcript_id])
                 UTR3_len = int(transcript_id_to_UTR3_len[transcript_id])
                 canonical_end = transcript_len - UTR3_len
-                pep_len, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf, shorter_ouorf, longer_ouorf, total_ouorf = simulation_int(species, orf_id, exon_structure_file, canonical_start, canonical_end,  simulation_num, int_fasta, int_ids, dct_int_GT_AG)
+                pep_len, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf, shorter_ouorf, longer_ouorf, total_ouorf = simulation_trans(species, orf_id, exon_structure_file, canonical_start, canonical_end,  simulation_num, s_fasta, s_ids, dct_trans_GT_AG)
             else:
                 transcript_len = int(transcript_id_to_transcript_len[transcript_id])
-                pep_len, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf, shorter_ouorf, longer_ouorf, total_ouorf = simulation_int(species, orf_id, exon_structure_file, 0, 0,  simulation_num, int_fasta, int_ids, dct_int_GT_AG)
+                pep_len, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf, shorter_ouorf, longer_ouorf, total_ouorf = simulation_trans(species, orf_id, exon_structure_file, 0, 0,  simulation_num, s_fasta, s_ids, dct_trans_GT_AG)
             
             fdr_S_all = round(shorter_all/total_all, 16)
             fdr_L_all = round(longer_all/total_all, 16)
