@@ -47,14 +47,14 @@ if __name__ == "__main__":
     species = args.species
     partition = args.partition
 
-    #concatenated_transcript_seq = get_concatenated_transcript_seq(species)
-    #shuffled_concatenated_transcript_seq = get_shuffled_seq(concatenated_transcript_seq)
-    #i = 0
-    #with open("data/trans/" + species + ".shuffled_concatenated_transcript.fa", "w") as w:
-    #    while len(shuffled_concatenated_transcript_seq) > 0:
-    #        piece, shuffled_concatenated_transcript_seq = shuffled_concatenated_transcript_seq[:partition], shuffled_concatenated_transcript_seq[partition:]
-    #        w.write(">shuffled_concatenated_transcript_" +  str(i) + "\n" + piece + "\n")
-    #        i += 1
+    concatenated_transcript_seq = get_concatenated_transcript_seq(species)
+    shuffled_concatenated_transcript_seq = get_shuffled_seq(concatenated_transcript_seq)
+    i = 0
+    with open("data/trans/" + species + ".shuffled_concatenated_transcript.fa", "w") as w:
+        while len(shuffled_concatenated_transcript_seq) > 0:
+            piece, shuffled_concatenated_transcript_seq = shuffled_concatenated_transcript_seq[:partition], shuffled_concatenated_transcript_seq[partition:]
+            w.write(">shuffled_concatenated_transcript_" +  str(i) + "\n" + piece + "\n")
+            i += 1
 
 
     s_fasta = Fasta("data/trans/" + species + ".shuffled_concatenated_transcript.fa")

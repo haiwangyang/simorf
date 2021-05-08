@@ -1,11 +1,12 @@
 """
 
-A script to classify human orf based on gtf annotation gene_type and look up table
+A script to classify orf based on gtf annotation gene_type and look up table
 and add basic orf and transcript/gene info
 
 
 Example script:
-python add_info_to_human_orf_list.py -s human -olf list/human.orf_id.list.all -iff output/human.intFDRs.sim2000.latest.txt -sff output/human.transFDRs.sim2000.latest.txt -o output/human.FDRs.with_info.txt
+s=yeast
+python add_info_to_yeast_orf_list.py -s ${s} -olf list/${s}.orf_id.list.all -iff output/${s}.intFDRs.sim2000.txt -sff output/${s}.transFDRs.sim2000.txt -o output/${s}.FDRs.with_info.txt
 
 Parameter description:
 s  = species
@@ -17,7 +18,7 @@ __email__ = "haiwang.yang@northwestern.edu"
 
 
 from timeit import default_timer as timer
-from common_functions import Orf, Transcript2, get_elements, get_A2B, object_to_pickle, pickle_to_object
+from common_functions import Orf, Transcript2, get_elements, get_A2B, object_to_pickle, pickle_to_object, get_A2Last
 import argparse
 import os
 import re
@@ -68,42 +69,15 @@ if __name__ == "__main__":
     orf_id_to_shu_FDR_L_ouORF = get_A2B(shu_fdr_file,  1, 22)
     orf_id_to_shu_FDR_L_ouORF_T = get_A2B(shu_fdr_file,  1, 23)
 
-    orf_id_to_chrom = get_A2B("features/human.orf.genePred", 1, 2)
-    orf_id_to_strand = get_A2B("features/human.orf.genePred", 1, 3)
-    orf_id_to_orf_start = get_A2B("features/human.orf.genePred", 1, 6)
-    orf_id_to_orf_end = get_A2B("features/human.orf.genePred", 1, 7)
-    orf_id_to_GSE_tissue_exist = get_A2B("features/human.orf.GSE_tissue_exist", 1, 41)
+    orf_id_to_chrom = get_A2B("features/" + species + ".orf.genePred", 1, 2)
+    orf_id_to_strand = get_A2B("features/" + species + ".orf.genePred", 1, 3)
+    orf_id_to_orf_start = get_A2B("features/" + species + ".orf.genePred", 1, 6)
+    orf_id_to_orf_end = get_A2B("features/" + species + ".orf.genePred", 1, 7)
+    orf_id_to_verified = get_A2B("features/" + species + ".orf.verified", 1, 2)
+    orf_id_to_GSE_tissue_exist = get_A2Last("features/" + species + ".orf.GSE_tissue_exist", 1)
 
-    orf_id_to_phylocsf = get_A2B("features/human.phylocsf.txt", 1, 2) 
-    orf_id_to_optimizedcodon = get_A2B("features/human.optimizedcodon.txt", 1, 4)
-    orf_id_to_r_hydrophobic = get_A2B("features/human.orf.aa_feature", 1, 3)
-    orf_id_to_r_amphipathic = get_A2B("features/human.orf.aa_feature", 1, 4)
-    orf_id_to_r_polar = get_A2B("features/human.orf.aa_feature", 1, 5)
-    orf_id_to_r_charged = get_A2B("features/human.orf.aa_feature", 1, 6)
-    orf_id_to_kozak_score = get_A2B("features/human.orf.kozak_feature", 1, 2)
-    orf_id_to_MFE_AUG_upstream = get_A2B("features/human.orf.MFE_feature", 1, 2) # U
-    orf_id_to_MFE_AUG_downstream = get_A2B("features/human.orf.MFE_feature", 1, 3) # U
-    orf_id_to_var_syn = get_A2B("features/human.orf.variance_count_per_aa", 1, 2)
-    orf_id_to_var_mis = get_A2B("features/human.orf.variance_count_per_aa", 1, 3)
-    orf_id_to_var_cid = get_A2B("features/human.orf.variance_count_per_aa", 1, 4)
-    orf_id_to_var_spa = get_A2B("features/human.orf.variance_count_per_aa", 1, 5)
-    orf_id_to_var_spd = get_A2B("features/human.orf.variance_count_per_aa", 1, 6)
-    orf_id_to_var_did = get_A2B("features/human.orf.variance_count_per_aa", 1, 7)
-    orf_id_to_var_sog = get_A2B("features/human.orf.variance_count_per_aa", 1, 8)
-    orf_id_to_var_sal = get_A2B("features/human.orf.variance_count_per_aa", 1, 9)
-    orf_id_to_var_fsh = get_A2B("features/human.orf.variance_count_per_aa", 1, 10)
-
-    expression_columns = ["EMTAB7247h_Brain","EMTAB7247h_Liver","EMTAB7247h_Testis","GSE101760_A549","GSE103308_Muscle","GSE105082_HeLa","GSE125218_HEK293T","GSE125218_HeLa","GSE125218_K562","GSE129061_HepG2","GSE129061_K562","GSE131650_iPSC","GSE143263_A375","GSE143263_Bcell","GSE143263_HCT116","GSE42509_Fibroblast","GSE51424_BrainTumor","GSE56924_U2OS","GSE58207_HCT116","GSE59095_HEK293T","GSE59817_MCF10A","GSE59820_Kidney","GSE61742_Lymphoblastoid","GSE62247_ESC","GSE63591_HeLa","GSE64962_Fibroblast","GSE65885_Fibroblast","GSE65885_MCF10AERSrc","GSE67902_RPE1","GSE69923_MCF7","GSE69923_T47D","GSE70211_HEK293T","GSE71763_CHL1","GSE73136_HEK293","GSE78961_ESC","GSE78961_Neuron","GSE80156_HEK293","GSE89183_Erythroid","GSE94454_Huh7","GSE94460_HEK293","GSE_all"]
-    dct_expression = {}
-    for _, colname in enumerate(expression_columns):
-        dct_expression[colname] = get_A2B("features/human.orf.RPKM_feature", 1, _ + 3)
-
-    orf_id_to_verified = get_A2B("features/human.orf.verified", 1, 2)
-    orf_id_to_westernblot_intensity = get_A2B("features/human.orf.westernblot_feature", 1, 2)
-    orf_id_to_ucsc_matched_stop = get_A2B("features/human.orf.ucsc_matched", 1, 2)
-    orf_id_to_ucsc_matched_stopstart = get_A2B("features/human.orf.ucsc_matched", 1, 3)
-    orf_id_to_ucsc_matched_start = get_A2B("features/human.orf.ucsc_matched", 1, 4)
-    orf_id_to_gencode_matched_start = get_A2B("features/human.orf.ucsc_matched", 1, 5)
+    orf_id_to_ucsc_matched_stop = get_A2B("features/" + species + ".orf.ucsc_matched", 1, 2)
+    orf_id_to_ucsc_matched_stopstart = get_A2B("features/" + species + ".orf.ucsc_matched", 1, 3)
 
     transcript_id_to_gene_id = {}
     gene_id_to_gene_classification = {}
@@ -132,8 +106,7 @@ if __name__ == "__main__":
                     
     orf_list = get_elements(orf_list_file)
     with open(output, "w") as w:
-        w.write("\t".join(["orf_id", "chrom", "strand", "orf_start", "orf_end", "GSE_tissue_exist", "if_GSE_tissue_multi_exist","if_candidate", "verified", "if_gencode_matched_start", "ucsc_matched_start", "ucsc_matched_stop", "ucsc_matched_stopstart", "orf_type", "orf_classification", "orf_upstream_len", "orf_start_codon", "orf_pep_len", "westernblot_intensity", "phylocsf", "optimizedcodon", "r_hydrophobic", "r_amphipathic", "r_polar", "r_charged", "kozak_score", "MFE_AUG_upstream", "MFE_AUG_downstream", "int_FDR_L_all", "int_FDR_L_main", "int_FDR_L_uORF", "int_FDR_L_ouORF", "shu_FDR_L_all", "shu_FDR_L_main", "shu_FDR_L_uORF", "shu_FDR_L_ouORF", "max_FDR_L_all", "transcript_id", "transcript_len", "UTR5_len", "canonical_len", "UTR3_len", "gene_id", "gene_name", "gene_type", "gene_classification", "synonymous_variant", "missense_variant", "conservative_inframe_deletion", "splice_acceptor_variant", "splice_donor_variant", "disruptive_inframe_deletion", "stop_gained", "start_lost", "frameshift_variant"] + expression_columns) + "\n")
-
+        w.write("\t".join(["orf_id", "chrom", "strand", "orf_start", "orf_end", "GSE_tissue_exist", "if_GSE_tissue_multi_exist", "if_candidate", "verified", "ucsc_matched_stop", "ucsc_matched_stopstart", "orf_type", "orf_classification", "orf_start_codon", "orf_pep_len", "int_FDR_L_all", "int_FDR_L_main", "int_FDR_L_uORF", "int_FDR_L_ouORF", "shu_FDR_L_all", "shu_FDR_L_main", "shu_FDR_L_uORF", "shu_FDR_L_ouORF", "transcript_id", "transcript_len", "UTR5_len", "canonical_len", "UTR3_len", "gene_id", "gene_name", "gene_type", "gene_classification"]) + "\n")
         for orf_id in orf_list:
             orf = Orf(species, orf_id)
             chrom = orf_id_to_chrom[orf_id]
@@ -144,7 +117,7 @@ if __name__ == "__main__":
             if_GSE_tissue_multi_exist = 0
             if int(GSE_tissue_exist) > 1:
                 if_GSE_tissue_multi_exist = 1
-            
+
             if float(orf_id_to_int_FDR_L_all[orf_id]) > 0:
                 int_FDR_L_all = float(orf_id_to_int_FDR_L_all[orf_id]) / float(orf_id_to_int_FDR_L_all_T[orf_id])
             else:
@@ -185,44 +158,21 @@ if __name__ == "__main__":
             else:
                 shu_FDR_L_ouORF = 1 / float(orf_id_to_shu_FDR_L_ouORF_T[orf_id])
 
-            max_FDR_L_all = max(int_FDR_L_all, shu_FDR_L_all)
+
+
 
             verified = orf_id_to_verified.get(orf_id, "-")
             ucsc_matched_stop = orf_id_to_ucsc_matched_stop[orf_id]
             ucsc_matched_stopstart = orf_id_to_ucsc_matched_stopstart[orf_id]
-            ucsc_matched_start = orf_id_to_ucsc_matched_start[orf_id]
-            gencode_matched_start = orf_id_to_gencode_matched_start[orf_id]
-            westernblot_intensity = orf_id_to_westernblot_intensity.get(orf_id, "NA")
-            phylocsf = orf_id_to_phylocsf.get(orf_id, "-10")
-            if phylocsf == "":
-                phylocsf = "-10"
-            optimizedcodon = orf_id_to_optimizedcodon.get(orf_id, "0")
-            r_hydrophobic = orf_id_to_r_hydrophobic[orf_id]
-            r_amphipathic = orf_id_to_r_amphipathic[orf_id]
-            r_polar = orf_id_to_r_polar[orf_id]
-            r_charged = orf_id_to_r_charged[orf_id]
-
-            kozak_score = orf_id_to_kozak_score[orf_id]
-            MFE_AUG_upstream = orf_id_to_MFE_AUG_upstream[orf_id]
-            MFE_AUG_downstream = orf_id_to_MFE_AUG_downstream[orf_id]
-
-            var_syn = orf_id_to_var_syn.get(orf_id, 0)
-            var_mis = orf_id_to_var_mis.get(orf_id, 0)
-            var_cid = orf_id_to_var_cid.get(orf_id, 0)
-            var_spa = orf_id_to_var_spa.get(orf_id, 0)
-            var_spd = orf_id_to_var_spd.get(orf_id, 0)
-            var_did = orf_id_to_var_did.get(orf_id, 0)
-            var_sog = orf_id_to_var_sog.get(orf_id, 0)
-            var_sal = orf_id_to_var_sal.get(orf_id, 0)
-            var_fsh = orf_id_to_var_fsh.get(orf_id, 0)
-
             transcript_id = orf.transcript_id
             UTR5_len = transcript_id_to_UTR5_len[transcript_id]
             CDS_len = transcript_id_to_CDS_len[transcript_id]
             UTR3_len = transcript_id_to_UTR3_len[transcript_id]
-            gene_id = transcript_id_to_gene_id[transcript_id]
-            gene_name = gene_id_to_gene_name[gene_id]
-            gene_type, gene_classification = gene_id_to_gene_classification[gene_id]
+            #gene_id = transcript_id_to_gene_id[transcript_id]
+            gene_id = transcript_id_to_gene_id.get(transcript_id, transcript_id)
+            #gene_name = gene_id_to_gene_name[gene_id]
+            gene_name = gene_id_to_gene_name.get(gene_id, gene_id)
+            gene_type, gene_classification = gene_id_to_gene_classification.get(gene_id, ['non_coding', 'lncRNA'])
             orf_classification = "canonical"
             if "uORF" in orf.orf_type:
                 orf_classification = orf.orf_type
@@ -230,9 +180,10 @@ if __name__ == "__main__":
                 orf_classification = "lncRNA"
             elif gene_classification == "pseudogene":
                 orf_classification = "pseudogene"
+
             if_candidate = 0
-            if verified != "-" or ucsc_matched_stopstart != "-":
+            if verified != "-":
                 if_candidate = 1
-            lst_to_print = [orf_id, chrom, strand, orf_start, orf_end, GSE_tissue_exist, if_GSE_tissue_multi_exist, if_candidate, verified, gencode_matched_start, ucsc_matched_start, ucsc_matched_stop, ucsc_matched_stopstart, orf.orf_type, orf_classification, orf.orf_start, orf.start_codon, orf.pep_len, westernblot_intensity, phylocsf, optimizedcodon, r_hydrophobic, r_amphipathic, r_polar, r_charged, kozak_score, MFE_AUG_upstream, MFE_AUG_downstream, int_FDR_L_all, int_FDR_L_main, int_FDR_L_uORF, int_FDR_L_ouORF, shu_FDR_L_all, shu_FDR_L_main, shu_FDR_L_uORF, shu_FDR_L_ouORF, max_FDR_L_all, transcript_id, orf.transcript_len, UTR5_len, CDS_len, UTR3_len, gene_id, gene_name, gene_type, gene_classification, var_syn, var_mis, var_cid, var_spa, var_spd, var_did, var_sog, var_sal, var_fsh]
-            w.write("\t".join([str(_) for _ in lst_to_print]) + "\t")
-            w.write("\t".join([dct_expression[_][orf_id] for _ in expression_columns]) + "\n")
+
+            lst_to_print = [orf_id, chrom, strand, orf_start, orf_end, GSE_tissue_exist, if_GSE_tissue_multi_exist, if_candidate, verified, ucsc_matched_stop, ucsc_matched_stopstart, orf.orf_type, orf_classification, orf.start_codon, orf.pep_len, int_FDR_L_all, int_FDR_L_main, int_FDR_L_uORF, int_FDR_L_ouORF, shu_FDR_L_all, shu_FDR_L_main, shu_FDR_L_uORF, shu_FDR_L_ouORF, transcript_id, orf.transcript_len, UTR5_len, CDS_len, UTR3_len, gene_id, gene_name, gene_type, gene_classification]
+            w.write("\t".join([str(_) for _ in lst_to_print]) + "\n")

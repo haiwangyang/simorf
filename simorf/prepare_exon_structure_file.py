@@ -21,7 +21,7 @@ import argparse
 from Bio.Seq import Seq
 from os import path
 from pyfaidx import Fasta
-from common_functions import get_revcom_dna, object_to_pickle, pickle_to_object
+from common_functions import get_revcom_dna, object_to_pickle, pickle_to_object, get_intersection_union_jaccard
 
 
 def generate_transcript_fa(species):
@@ -48,6 +48,60 @@ def generate_transcript_fa(species):
                 for iexon in transcript_id_to_iexons[transcript_id][::-1]:
                     transcript_seq += get_revcom_dna(iexon)
             w.write(">" + transcript_id + "\n" + transcript_seq + "\n")
+
+def generate_UTR_fa(species):
+    dct_UTR5 = dict()
+    dct_UTR3 = dict()
+    print("calculating UTR")
+    with open("./annotation/" + species + ".annotation.genePred", "r") as r:
+        for line in r.readlines():
+            transcript_id, chrom, strand, txStart, txEnd, cdsStart, cdsEnd, exonCount, exonStarts, exonEnds = line.rstrip().split("\t")
+            #if transcript_id == "ENST00000182527.3":
+            if True:
+                txStart = int(txStart)
+                txEnd = int(txEnd)
+                cdsStart = int(cdsStart)
+                cdsEnd = int(cdsEnd)
+                exonCount = int(exonCount)
+                if cdsStart == cdsEnd:
+                    coding = False
+                else:
+                    coding = True
+
+                if coding:
+                    left_range = [(txStart, cdsStart)]
+                    right_range = [(cdsEnd, txEnd)]
+                    exonmap = list(zip(exonStarts.rstrip(",").split(","), exonEnds.rstrip(",").split(",")))
+                    left_UTR_len = get_intersection_union_jaccard(left_range, exonmap)[0] - 1
+                    right_UTR_len = get_intersection_union_jaccard(right_range, exonmap)[0] - 1
+                    if strand == "+":
+                        UTR5_len = left_UTR_len
+                        UTR3_len = right_UTR_len
+                    elif strand == "-":
+                        UTR5_len = right_UTR_len
+                        UTR3_len = left_UTR_len
+                    dct_UTR5[transcript_id] = UTR5_len
+                    dct_UTR3[transcript_id] = UTR3_len
+                else:
+                    dct_UTR5[transcript_id] = 0
+                    dct_UTR3[transcript_id] = 0
+
+    print("generating UTR seq")
+    with open("./annotation/" + species + ".UTR5.fa", "w") as w5, open("./annotation/" + species + ".UTR3.fa", "w") as w3:
+        trans_fasta = Fasta("./annotation/" + species + ".transcript.fa")
+        # UTR5
+        for transcript_id, len_UTR5 in dct_UTR5.items():
+            transcript_seq = str(trans_fasta[transcript_id])
+            if len_UTR5 > 0:
+                UTR5_seq = transcript_seq[:len_UTR5]
+                w5.write(">" + transcript_id + "\n" + UTR5_seq + "\n")
+
+        # UTR3
+        for transcript_id, len_UTR3 in dct_UTR3.items():
+            transcript_seq = str(trans_fasta[transcript_id])
+            if len_UTR3 > 0:
+                UTR3_seq = transcript_seq[-len_UTR3:]
+                w3.write(">" + transcript_id + "\n" + UTR3_seq + "\n")    
 
 def generate_transcript_cds_range(species):
     fasta = Fasta("./annotation/" + species + ".fa")
@@ -163,6 +217,9 @@ if __name__ == "__main__":
     if not path.exists("./annotation/" + species + ".transcript.fa"):
         #print("generating transcript fasta for " + species)
         generate_transcript_fa(species)
+
+    if not path.exists("./annotation/" + species + ".UTR5.fa"):
+        generate_UTR_fa(species)
 
     if not path.exists("./annotation/" + species + ".transcript.cds_range"):
         #print("generating transcript cds range for " + species)

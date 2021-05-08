@@ -49,6 +49,7 @@ if __name__ == "__main__":
     with open("/projects/b1080/hy/simorf/simorf/data/intron/" + species + ".annotation.intron.fa", "w") as w:
         w.write(">" + intergenic_id + "\n" + concatenated_intergenic + "\n")
 
+
     dct_intergenic_GT_AG = {}
     dct_intergenic_GT_AG[intergenic_id] = dict()
     dct_intergenic_GT_AG[intergenic_id]['GT'] = []

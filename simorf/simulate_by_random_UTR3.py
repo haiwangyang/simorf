@@ -3,9 +3,7 @@
 A script to test if a given ORF is shorter or longer than expected by intergenic region fetching method
 
 Example script:
-python simulate_by_random_int.py -s human -oi "ENST00000370418.7:chr10:-|3|1863:63:90|uORF|ATG|253|1630|63|90" -esf data/exon_structure/human/ENST00000370418.7.exon_structure -cs 252 -ce 1629 -sn 1000 -tp 100 -tn 10000
-
-python simulate_by_int.py -s human -oi "ENST00000370418.7:chr10:-|3|1863:63:90|uORF|ATG|253|1630|63|90" -esf data/exon_structure/human/ENST00000370418.7.exon_structure -cs 252 -ce 1629 -sn 1000 -tp 100 -tn 1000
+python simulate_by_random_UTR3.py -s human -oi "ENST00000370418.7:chr10:-|3|1863:63:90|uORF|ATG|253|1630|63|90" -esf data/exon_structure/human/ENST00000370418.7.exon_structure -cs 252 -ce 1629 -sn 1000 -tp 1 -tn 1000
 
 Parameter description:
 s  = species
@@ -356,37 +354,41 @@ def example_int(species, orf_id, exon_structure_file, canonical_start, canonical
 
     return lst_sim_all_orf_cds, lst_sim_main_orf_cds, lst_sim_uorf_cds, lst_sim_overlapping_uorf_cds, lst_sim_all_orf_pep_len, lst_sim_main_orf_pep_len, lst_sim_uorf_pep_len, lst_sim_overlapping_uorf_pep_len
 
-def generate_merged_int(species, top_pos, top_num):
+def get_GT_AG_dct(fasta):
+    dct_GT_AG = {}
+    for _ in fasta.keys():
+        dct_GT_AG[_] = dict()
+        dct_GT_AG[_]['GT'] = []
+        dct_GT_AG[_]['AG'] = []
+        for m in re.finditer(r"GT", str(fasta[_])):
+            dct_GT_AG[_]['GT'].append(m.start())
+
+        for m in re.finditer(r"AG", str(fasta[_])):
+            dct_GT_AG[_]['AG'].append(m.start())
+    return dct_GT_AG
+
+
+def generate_merged_UTR3(species, top_pos, top_num):
     """ generate a small set of intergenic and intron mixed data to boost simulation speed """
-    if species != "yeast":
-        half_top_num = top_num//2
-        intergenic_fasta = Fasta("./data/intergenic/" + species + ".annotation.intergenic.fa")
-        intergenic_ids = list(intergenic_fasta.keys())
-        intron_fasta = Fasta("./data/intron/" + species + ".annotation.intron.fa")
-        intron_ids = list(intron_fasta.keys())
+    half_top_num = top_num//2
+    UTR3_fasta = Fasta("./data/UTR3/" + species + ".annotation.UTR3.fa")
+    UTR3_ids = list(UTR3_fasta.keys())
 
-        longest_intergenic_ids = sorted(intergenic_ids, key=lambda x: -len(intergenic_fasta[x]))[top_pos:(top_pos+half_top_num)]
-        longest_intron_ids = sorted(intron_ids, key=lambda x: -len(intron_fasta[x]))[top_pos:(top_pos+half_top_num)]
-        longest_int_ids = longest_intergenic_ids + longest_intron_ids
+    longest_UTR3_ids = sorted(UTR3_ids, key=lambda x: -len(UTR3_fasta[x]))[top_pos:(top_pos+half_top_num)]
 
-        with open("./data/int/" + species + ".annotation.int.from" + str(top_pos) + "top" + str(top_num) + ".fa", "w") as w:
-            for intergenic_id in longest_intergenic_ids:
-                w.write(">" + intergenic_id + "\n" + str(intergenic_fasta[intergenic_id]) + "\n")
-            for intron_id in longest_intron_ids:
-                w.write(">" + intron_id + "\n" + str(intron_fasta[intron_id]) + "\n")
+    with open("./data/UTR3/" + species + ".annotation.UTR3.from" + str(top_pos) + "top" + str(top_num) + ".fa", "w") as w:
+        for UTR3_id in longest_UTR3_ids:
+            w.write(">" + UTR3_id + "\n" + str(UTR3_fasta[UTR3_id]) + "\n")
 
-        dct_intergenic_GT_AG = pickle_to_object("/projects/b1080/hy/simorf/simorf/data/intergenic/" + species + ".dct_intergenic_GT_AG.pickle")
-        dct_intron_GT_AG = pickle_to_object("/projects/b1080/hy/simorf/simorf/data/intron/" + species + ".dct_intron_GT_AG.pickle")
-        dct_longest_int_GT_AG = {}
-        for intergenic_id in longest_intergenic_ids:
-            dct_longest_int_GT_AG[intergenic_id] = dct_intergenic_GT_AG[intergenic_id]
-        for intron_id in longest_intron_ids:
-            dct_longest_int_GT_AG[intron_id] = dct_intron_GT_AG[intron_id]
+    dct_UTR3_GT_AG = get_GT_AG_dct(UTR3_fasta)
+    object_to_pickle(dct_UTR3_GT_AG, "/projects/b1080/hy/simorf/simorf/data/UTR3/" + species + ".dct_UTR3_GT_AG.pickle")
 
-        object_to_pickle(dct_longest_int_GT_AG, "/projects/b1080/hy/simorf/simorf/data/int/" + species + ".dct_int_GT_AG.from" + str(top_pos) + "top" + str(top_num) + ".pickle")
-    else:
-        os.system("cp ./data/intergenic/" + species + ".annotation.intergenic.fa ./data/int/" + species + ".annotation.int.from" + str(top_pos) + "top" + str(top_num) + ".fa")
-        os.system("cp /projects/b1080/hy/simorf/simorf/data/intergenic/" + species + ".dct_intergenic_GT_AG.pickle ./data/int/" + species + ".dct_int_GT_AG.from" + str(top_pos) + "top" + str(top_num) + ".pickle")
+    dct_longest_UTR3_GT_AG = {}
+    for _ in longest_UTR3_ids:
+        dct_longest_UTR3_GT_AG[_] = {}
+        dct_longest_UTR3_GT_AG[_]["GT"] = dct_UTR3_GT_AG[_]["GT"]
+        dct_longest_UTR3_GT_AG[_]["AG"] = dct_UTR3_GT_AG[_]["AG"]
+    object_to_pickle(dct_longest_UTR3_GT_AG, "/projects/b1080/hy/simorf/simorf/data/UTR3/" + species + ".dct_UTR3_GT_AG.from" + str(top_pos) + "top" + str(top_num) + ".pickle")
 
 ###################
 ### main script ###
@@ -421,21 +423,20 @@ def main():
     dct_exon_structure = fetch_exon_structure(exon_structure_file)
     exon_structure = dct_exon_structure[orf.transcript_id]
 
-    if not os.path.exists("/projects/b1080/hy/simorf/simorf/data/int/" + species + ".dct_int_GT_AG.from" + str(top_pos) + "top" + str(top_num) + ".pickle"):    
-        generate_merged_int(species, top_pos, top_num) 
+    if not os.path.exists("/projects/b1080/hy/simorf/simorf/data/UTR3/" + species + ".dct_int_GT_AG.from" + str(top_pos) + "top" + str(top_num) + ".pickle"):    
+        generate_merged_UTR3(species, top_pos, top_num) 
     
-    int_fasta = Fasta("./data/int/" + species + ".annotation.int.from" + str(top_pos) + "top" + str(top_num) + ".fa")
-    int_ids = list(int_fasta.keys())
+    #int_fasta = Fasta("./data/int/" + species + ".annotation.int.from" + str(top_pos) + "top" + str(top_num) + ".fa")
+    #int_ids = list(int_fasta.keys())
 
-    dct_int_GT_AG = pickle_to_object("/projects/b1080/hy/simorf/simorf/data/int/" + species + ".dct_int_GT_AG.from" + str(top_pos) + "top" + str(top_num) + ".pickle")
+    #dct_int_GT_AG = pickle_to_object("/projects/b1080/hy/simorf/simorf/data/int/" + species + ".dct_int_GT_AG.from" + str(top_pos) + "top" + str(top_num) + ".pickle")
 
-    transcript =Transcript2(species, orf.transcript_id, exon_structure, canonical_start, canonical_end)
+    #transcript =Transcript2(species, orf.transcript_id, exon_structure, canonical_start, canonical_end)
 
 
-    pep_len, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf, shorter_ouorf, longer_ouorf, total_ouorf = simulation_int(species, orf_id, exon_structure_file, canonical_start, canonical_end,  simulation_num, int_fasta, int_ids, dct_int_GT_AG)    
-    print(pep_len, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf
-, shorter_ouorf, longer_ouorf, total_ouorf)
-    
+    #pep_len, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf, shorter_ouorf, longer_ouorf, total_ouorf = simulation_int(species, orf_id, exon_structure_file, canonical_start, canonical_end,  simulation_num, int_fasta, int_ids, dct_int_GT_AG)    
+    #print(pep_len, shorter_all, longer_all, total_all, shorter_main, longer_main, total_main, shorter_uorf, longer_uorf, total_uorf, sh#orter_ouorf, longer_ouorf, total_ouorf)
+    #
 if __name__ == "__main__":
     start = timer()
     main()

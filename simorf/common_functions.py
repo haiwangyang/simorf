@@ -74,3 +74,49 @@ def get_A2B(filename, colKey, colValue):
             temp = line.rstrip().split("\t")
             dct[temp[colKey - 1]] = temp[colValue - 1]
     return(dct)
+
+def get_A2Last(filename, colKey):
+    """ get dict of A2Last from tab-separated table """
+    dct = dict()
+    with open(filename, 'r') as f:
+        for line in f.readlines():
+            temp = line.rstrip().split("\t")
+            dct[temp[colKey - 1]] = temp[-1]
+    return(dct)
+
+def get_intersection_union_jaccard(exonmap1, exonmap2):
+    """ get jaccard between exon map
+        1.3 and 2.4
+        jaccard = 2/4 = 0.5
+    """
+    union_sum = 0
+    intersection_sum = 0
+
+    dct1 = dict()
+    for se in exonmap1:
+        s, e = se
+        for i in range(int(s), int(e) + 1):
+            if not i in dct1.keys():
+                dct1[i] = 0
+            dct1[i] += 1
+
+    dct2 = dict()
+    for se in exonmap2:
+        s, e = se
+        for i in range(int(s), int(e) + 1):
+            if not i in dct2.keys():
+                dct2[i] = 0
+            dct2[i] += 1
+
+    st = set()
+    for ii in [dct1.keys(), dct2.keys()]:
+        for i in ii:
+            st.add(i)
+
+    union_sum = len(st)
+    for i in st:
+        if i in dct1.keys() and i in dct2.keys():
+            intersection_sum += 1
+
+    j = intersection_sum / union_sum
+    return(intersection_sum, union_sum, j)
