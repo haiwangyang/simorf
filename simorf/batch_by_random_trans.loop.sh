@@ -6,6 +6,11 @@ for f in `cat list/$folder/file.list`; do
     sbatch batch_by_random_trans.sh human list/$folder/$f 2000 output/$folder/$f
 done
 
+folder=human_trans
+sbatch batch_by_random_trans.sh human list/$folder/test_old 2000 output/$folder/test_old
+sbatch batch_by_random_trans.sh human list/$folder/test_replace 2000 output/$folder/test_replace
+sbatch batch_by_random_trans.sh human list/$folder/test_1 2000 output/$folder/test_1
+
 folder=mouse_trans
 for f in `cat list/$folder/file.list`; do
     sbatch batch_by_random_trans.sh mouse list/$folder/$f 2000 output/$folder/$f

@@ -5,11 +5,9 @@ and add basic orf and transcript/gene info
 
 
 Example script:
-s=zebrafish
-python add_info_to_species_orf_list.py -s ${s} -olf list/${s}.orf_id.list.all -iff output/${s}.intFDRs.sim2000.txt -sff output/${s}.transFDRs.sim2000.txt -o output/${s}.FDRs.with_info.txt
+s=mouse
+python add_info_to_mouse_orf_list.py -s ${s} -olf list/${s}.orf_id.list.all -iff output/${s}.intFDRs.sim2000.txt -sff output/${s}.transFDRs.sim2000.txt -o output/${s}.FDRs.with_info.txt
 
-
-python add_info_to_species_orf_list.py -s human -olf list/human.orf_id.extra -iff output/human.intFDRs.sim2000.extra.txt -sff output/human.transFDRs.sim2000.extra.txt -o output/human.FDRs.with_info.extra.txt
 
 Parameter description:
 s  = species
@@ -82,7 +80,8 @@ if __name__ == "__main__":
 
     orf_id_to_ucsc_matched_stop = get_A2B("features/" + species + ".orf.ucsc_matched", 1, 2)
     orf_id_to_ucsc_matched_stopstart = get_A2B("features/" + species + ".orf.ucsc_matched", 1, 3)
-    orf_id_to_ucsc_matched_start = get_A2B("features/" + species + ".orf.ucsc_matched", 1, 4)
+    orf_id_to_gencode_matched_start = get_A2B("features/" + species + ".orf.ucsc_matched", 1, 5)
+    orf_id_to_gencode_matched_stop = get_A2B("features/" + species + ".orf.ucsc_matched", 1, 6)
 
     transcript_id_to_gene_id = {}
     gene_id_to_gene_classification = {}
@@ -111,7 +110,7 @@ if __name__ == "__main__":
                     
     orf_list = get_elements(orf_list_file)
     with open(output, "w") as w:
-        w.write("\t".join(["orf_id", "chrom", "strand", "orf_start", "orf_end", "GSE_tissue_exist", "if_GSE_tissue_multi_exist", "if_candidate", "verified", "ucsc_matched_stop", "ucsc_matched_stopstart", "ucsc_matched_start", "orf_type", "orf_classification", "orf_start_codon", "orf_pep_len", "int_FDR_L_all", "int_FDR_L_main", "int_FDR_L_uORF", "int_FDR_L_ouORF", "shu_FDR_L_all", "shu_FDR_L_main", "shu_FDR_L_uORF", "shu_FDR_L_ouORF", "max_FDR_L_all", "transcript_id", "transcript_len", "UTR5_len", "canonical_len", "UTR3_len", "gene_id", "gene_name", "gene_type", "gene_classification"]) + "\n") 
+        w.write("\t".join(["orf_id", "chrom", "strand", "orf_start", "orf_end", "GSE_tissue_exist", "if_GSE_tissue_multi_exist", "if_candidate", "verified", "if_gencode_matched_start", "if_gencode_matched_stop", "ucsc_matched_stop", "ucsc_matched_stopstart", "orf_type", "orf_classification", "orf_start_codon", "orf_pep_len", "int_FDR_L_all", "int_FDR_L_main", "int_FDR_L_uORF", "int_FDR_L_ouORF", "shu_FDR_L_all", "shu_FDR_L_main", "shu_FDR_L_uORF", "shu_FDR_L_ouORF", "max_FDR_L_all", "transcript_id", "transcript_len", "UTR5_len", "canonical_len", "UTR3_len", "gene_id", "gene_name", "gene_type", "gene_classification"]) + "\n") 
         for orf_id in orf_list:
             orf = Orf(species, orf_id)
             chrom = orf_id_to_chrom[orf_id]
@@ -168,8 +167,8 @@ if __name__ == "__main__":
             verified = orf_id_to_verified.get(orf_id, "-")
             ucsc_matched_stop = orf_id_to_ucsc_matched_stop[orf_id]
             ucsc_matched_stopstart = orf_id_to_ucsc_matched_stopstart[orf_id]
-            ucsc_matched_start = orf_id_to_ucsc_matched_start[orf_id]
-
+            gencode_matched_start = orf_id_to_gencode_matched_start[orf_id]
+            gencode_matched_stop = orf_id_to_gencode_matched_stop[orf_id]
             transcript_id = orf.transcript_id
             UTR5_len = transcript_id_to_UTR5_len[transcript_id]
             CDS_len = transcript_id_to_CDS_len[transcript_id]
@@ -189,5 +188,5 @@ if __name__ == "__main__":
             if verified != "-":
                 if_candidate = 1
 
-            lst_to_print = [orf_id, chrom, strand, orf_start, orf_end, GSE_tissue_exist, if_GSE_tissue_multi_exist, if_candidate, verified, ucsc_matched_stop, ucsc_matched_stopstart, ucsc_matched_start, orf.orf_type, orf_classification, orf.start_codon, orf.pep_len, int_FDR_L_all, int_FDR_L_main, int_FDR_L_uORF, int_FDR_L_ouORF, shu_FDR_L_all, shu_FDR_L_main, shu_FDR_L_uORF, shu_FDR_L_ouORF, max_FDR_L_all, transcript_id, orf.transcript_len, UTR5_len, CDS_len, UTR3_len, gene_id, gene_name, gene_type, gene_classification]
+            lst_to_print = [orf_id, chrom, strand, orf_start, orf_end, GSE_tissue_exist, if_GSE_tissue_multi_exist, if_candidate, verified, gencode_matched_start, gencode_matched_stop, ucsc_matched_stop, ucsc_matched_stopstart, orf.orf_type, orf_classification, orf.start_codon, orf.pep_len, int_FDR_L_all, int_FDR_L_main, int_FDR_L_uORF, int_FDR_L_ouORF, shu_FDR_L_all, shu_FDR_L_main, shu_FDR_L_uORF, shu_FDR_L_ouORF, max_FDR_L_all, transcript_id, orf.transcript_len, UTR5_len, CDS_len, UTR3_len, gene_id, gene_name, gene_type, gene_classification]
             w.write("\t".join([str(_) for _ in lst_to_print]) + "\n")

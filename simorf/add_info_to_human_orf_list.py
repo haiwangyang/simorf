@@ -7,6 +7,14 @@ and add basic orf and transcript/gene info
 Example script:
 python add_info_to_human_orf_list.py -s human -olf list/human.orf_id.list.all -iff output/human.intFDRs.sim2000.latest.txt -sff output/human.transFDRs.sim2000.latest.txt -o output/human.FDRs.with_info.txt
 
+python add_info_to_human_orf_list.py -s human -olf list/human.orf_id.list.all -iff output/human.intFDRs.sim2000.extra.txt -sff output/human.transFDRs.sim2000.extra.txt -o output/human.FDRs.with_info.extra.txt
+
+s=human
+python add_info_to_human_orf_list.py -s $s -olf list/${s}_int/test_old -iff output/${s}_int/test_old -sff output/${s}_trans/test_old -o output/${s}.FDRs.with_info.test_old.txt
+
+python -i add_info_to_human_orf_list.py -s $s -olf list/${s}_int/test_replace -iff output/${s}_int/test_replace -sff output/${s}_trans/test_replace -o output/${s}.FDRs.with_info.test_replace.txt
+
+
 Parameter description:
 s  = species
 olf  = orf list file
@@ -104,6 +112,7 @@ if __name__ == "__main__":
     orf_id_to_ucsc_matched_stopstart = get_A2B("features/human.orf.ucsc_matched", 1, 3)
     orf_id_to_ucsc_matched_start = get_A2B("features/human.orf.ucsc_matched", 1, 4)
     orf_id_to_gencode_matched_start = get_A2B("features/human.orf.ucsc_matched", 1, 5)
+    orf_id_to_gencode_matched_stop = get_A2B("features/human.orf.ucsc_matched", 1, 6)
 
     transcript_id_to_gene_id = {}
     gene_id_to_gene_classification = {}
@@ -132,7 +141,7 @@ if __name__ == "__main__":
                     
     orf_list = get_elements(orf_list_file)
     with open(output, "w") as w:
-        w.write("\t".join(["orf_id", "chrom", "strand", "orf_start", "orf_end", "GSE_tissue_exist", "if_GSE_tissue_multi_exist","if_candidate", "verified", "if_gencode_matched_start", "ucsc_matched_start", "ucsc_matched_stop", "ucsc_matched_stopstart", "orf_type", "orf_classification", "orf_upstream_len", "orf_start_codon", "orf_pep_len", "westernblot_intensity", "phylocsf", "optimizedcodon", "r_hydrophobic", "r_amphipathic", "r_polar", "r_charged", "kozak_score", "MFE_AUG_upstream", "MFE_AUG_downstream", "int_FDR_L_all", "int_FDR_L_main", "int_FDR_L_uORF", "int_FDR_L_ouORF", "shu_FDR_L_all", "shu_FDR_L_main", "shu_FDR_L_uORF", "shu_FDR_L_ouORF", "max_FDR_L_all", "transcript_id", "transcript_len", "UTR5_len", "canonical_len", "UTR3_len", "gene_id", "gene_name", "gene_type", "gene_classification", "synonymous_variant", "missense_variant", "conservative_inframe_deletion", "splice_acceptor_variant", "splice_donor_variant", "disruptive_inframe_deletion", "stop_gained", "start_lost", "frameshift_variant"] + expression_columns) + "\n")
+        w.write("\t".join(["orf_id", "chrom", "strand", "orf_start", "orf_end", "GSE_tissue_exist", "if_GSE_tissue_multi_exist","if_candidate", "verified", "if_gencode_matched_start", "if_gencode_matched_stop", "ucsc_matched_start", "ucsc_matched_stop", "ucsc_matched_stopstart", "orf_type", "orf_classification", "orf_upstream_len", "orf_start_codon", "orf_pep_len", "westernblot_intensity", "phylocsf", "optimizedcodon", "r_hydrophobic", "r_amphipathic", "r_polar", "r_charged", "kozak_score", "MFE_AUG_upstream", "MFE_AUG_downstream", "int_FDR_L_all", "int_FDR_L_main", "int_FDR_L_uORF", "int_FDR_L_ouORF", "shu_FDR_L_all", "shu_FDR_L_main", "shu_FDR_L_uORF", "shu_FDR_L_ouORF", "max_FDR_L_all", "transcript_id", "transcript_len", "UTR5_len", "canonical_len", "UTR3_len", "gene_id", "gene_name", "gene_type", "gene_classification", "synonymous_variant", "missense_variant", "conservative_inframe_deletion", "splice_acceptor_variant", "splice_donor_variant", "disruptive_inframe_deletion", "stop_gained", "start_lost", "frameshift_variant"] + expression_columns) + "\n")
 
         for orf_id in orf_list:
             orf = Orf(species, orf_id)
@@ -192,6 +201,8 @@ if __name__ == "__main__":
             ucsc_matched_stopstart = orf_id_to_ucsc_matched_stopstart[orf_id]
             ucsc_matched_start = orf_id_to_ucsc_matched_start[orf_id]
             gencode_matched_start = orf_id_to_gencode_matched_start[orf_id]
+            gencode_matched_stop = orf_id_to_gencode_matched_stop[orf_id]
+
             westernblot_intensity = orf_id_to_westernblot_intensity.get(orf_id, "NA")
             phylocsf = orf_id_to_phylocsf.get(orf_id, "-10")
             if phylocsf == "":
@@ -233,6 +244,6 @@ if __name__ == "__main__":
             if_candidate = 0
             if verified != "-" or ucsc_matched_stopstart != "-":
                 if_candidate = 1
-            lst_to_print = [orf_id, chrom, strand, orf_start, orf_end, GSE_tissue_exist, if_GSE_tissue_multi_exist, if_candidate, verified, gencode_matched_start, ucsc_matched_start, ucsc_matched_stop, ucsc_matched_stopstart, orf.orf_type, orf_classification, orf.orf_start, orf.start_codon, orf.pep_len, westernblot_intensity, phylocsf, optimizedcodon, r_hydrophobic, r_amphipathic, r_polar, r_charged, kozak_score, MFE_AUG_upstream, MFE_AUG_downstream, int_FDR_L_all, int_FDR_L_main, int_FDR_L_uORF, int_FDR_L_ouORF, shu_FDR_L_all, shu_FDR_L_main, shu_FDR_L_uORF, shu_FDR_L_ouORF, max_FDR_L_all, transcript_id, orf.transcript_len, UTR5_len, CDS_len, UTR3_len, gene_id, gene_name, gene_type, gene_classification, var_syn, var_mis, var_cid, var_spa, var_spd, var_did, var_sog, var_sal, var_fsh]
+            lst_to_print = [orf_id, chrom, strand, orf_start, orf_end, GSE_tissue_exist, if_GSE_tissue_multi_exist, if_candidate, verified, gencode_matched_start, gencode_matched_stop, ucsc_matched_start, ucsc_matched_stop, ucsc_matched_stopstart, orf.orf_type, orf_classification, orf.orf_start, orf.start_codon, orf.pep_len, westernblot_intensity, phylocsf, optimizedcodon, r_hydrophobic, r_amphipathic, r_polar, r_charged, kozak_score, MFE_AUG_upstream, MFE_AUG_downstream, int_FDR_L_all, int_FDR_L_main, int_FDR_L_uORF, int_FDR_L_ouORF, shu_FDR_L_all, shu_FDR_L_main, shu_FDR_L_uORF, shu_FDR_L_ouORF, max_FDR_L_all, transcript_id, orf.transcript_len, UTR5_len, CDS_len, UTR3_len, gene_id, gene_name, gene_type, gene_classification, var_syn, var_mis, var_cid, var_spa, var_spd, var_did, var_sog, var_sal, var_fsh]
             w.write("\t".join([str(_) for _ in lst_to_print]) + "\t")
             w.write("\t".join([dct_expression[_][orf_id] for _ in expression_columns]) + "\n")
