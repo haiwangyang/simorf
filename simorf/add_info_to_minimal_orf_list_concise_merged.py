@@ -5,13 +5,11 @@ and add basic orf and transcript/gene info
 
 
 Example script:
-s=zebrafish
-python add_info_to_minimal_orf_list.py -s $s -olf list/$s.orf_id.updated -iff output/$s.intFDRs.sim2000.updated.txt -sff output/$s.transFDRs.sim2000.updated.txt -o output/$s.FDRs.with_info.updated.txt
+s=yeast
+#python add_info_to_minimal_orf_list_concise_merged.yeast.py -s $s -olf list/$s.intFDRs.sim2000.latest.orf_id -iff output/$s.intFDRs.sim2000.latest.txt -sff output/$s.transFDRs.sim2000.latest.txt -o output/$s.merged_FDR.0.txt
 
-s=human
-python add_info_to_minimal_orf_list.py -s $s -olf list/${s}_int/test_old -iff output/${s}_int/test_old -sff output/${s}_trans/test_old -o output/${s}.FDRs.with_info.test_old.txt
+python add_info_to_minimal_orf_list_concise_merged.yeast.py -s $s -olf list/$s.orf_id.updated -iff output/$s.intFDRs.sim2000.updated_with_extra.txt -sff output/$s.transFDRs.sim2000.updated.txt -o output/$s.merged_FDR.1.txt
 
-python add_info_to_minimal_orf_list.py -s $s -olf list/${s}_int/test_replace -iff output/${s}_int/test_replace -sff output/${s}_trans/test_replace -o output/${s}.FDRs.with_info.test_replace.txt
 
 Parameter description:
 s  = species
@@ -58,21 +56,9 @@ if __name__ == "__main__":
 
     orf_id_to_int_FDR_L_all = get_A2B(int_fdr_file,  1, 13)
     orf_id_to_int_FDR_L_all_T = get_A2B(int_fdr_file,  1, 14)
-    orf_id_to_int_FDR_L_main = get_A2B(int_fdr_file,  1, 16)
-    orf_id_to_int_FDR_L_main_T = get_A2B(int_fdr_file,  1, 17)
-    orf_id_to_int_FDR_L_uORF = get_A2B(int_fdr_file,  1, 19)
-    orf_id_to_int_FDR_L_uORF_T = get_A2B(int_fdr_file,  1, 20)
-    orf_id_to_int_FDR_L_ouORF = get_A2B(int_fdr_file,  1, 22)
-    orf_id_to_int_FDR_L_ouORF_T = get_A2B(int_fdr_file,  1, 23)
 
     orf_id_to_shu_FDR_L_all = get_A2B(shu_fdr_file,  1, 13)
     orf_id_to_shu_FDR_L_all_T = get_A2B(shu_fdr_file,  1, 14)
-    orf_id_to_shu_FDR_L_main = get_A2B(shu_fdr_file,  1, 16)
-    orf_id_to_shu_FDR_L_main_T = get_A2B(shu_fdr_file,  1, 17)
-    orf_id_to_shu_FDR_L_uORF = get_A2B(shu_fdr_file,  1, 19)
-    orf_id_to_shu_FDR_L_uORF_T = get_A2B(shu_fdr_file,  1, 20)
-    orf_id_to_shu_FDR_L_ouORF = get_A2B(shu_fdr_file,  1, 22)
-    orf_id_to_shu_FDR_L_ouORF_T = get_A2B(shu_fdr_file,  1, 23)
 
     orf_id_to_chrom = get_A2B("features/" + species + ".orf.genePred_with_extra", 1, 2)
     orf_id_to_strand = get_A2B("features/" + species + ".orf.genePred_with_extra", 1, 3)
@@ -106,7 +92,7 @@ if __name__ == "__main__":
                     
     orf_list = get_elements(orf_list_file)
     with open(output, "w") as w:
-        w.write("\t".join(["orf_id", "chrom", "strand", "orf_start", "orf_end", "orf_type", "orf_classification", "orf_start_codon", "orf_pep_len", "int_FDR_L_all", "int_FDR_L_main", "int_FDR_L_uORF", "int_FDR_L_ouORF", "shu_FDR_L_all", "shu_FDR_L_main", "shu_FDR_L_uORF", "shu_FDR_L_ouORF", "max_FDR_L_all", "transcript_id", "transcript_len", "UTR5_len", "canonical_len", "UTR3_len", "gene_id", "gene_name", "gene_type", "gene_classification"]) + "\n") 
+        w.write("\t".join(["orf_id", "chrom", "strand", "orf_start", "orf_end", "orf_type", "orf_classification", "orf_start_codon", "orf_pep_len", "int_FDR_L_all", "shu_FDR_L_all", "max_FDR_L_all", "merged_FDR_L_all", "int_L", "int_T", "shu_L", "shu_T", "transcript_id", "transcript_len", "UTR5_len", "canonical_len", "UTR3_len", "gene_id", "gene_name", "gene_type", "gene_classification"]) + "\n") 
         for orf_id in orf_list:
             orf = Orf(species, orf_id)
             chrom = orf_id_to_chrom[orf_id]
@@ -114,47 +100,25 @@ if __name__ == "__main__":
             orf_start = orf_id_to_orf_start[orf_id]
             orf_end = orf_id_to_orf_end[orf_id]
 
+            A, B = 0, 0
             if float(orf_id_to_int_FDR_L_all[orf_id]) > 0:
                 int_FDR_L_all = float(orf_id_to_int_FDR_L_all[orf_id]) / float(orf_id_to_int_FDR_L_all_T[orf_id])
+                A += float(orf_id_to_int_FDR_L_all[orf_id])
             else:
                 int_FDR_L_all = 1 / float(orf_id_to_int_FDR_L_all_T[orf_id])
-
-            if float(orf_id_to_int_FDR_L_main[orf_id]) > 0:
-                int_FDR_L_main = float(orf_id_to_int_FDR_L_main[orf_id]) / float(orf_id_to_int_FDR_L_main_T[orf_id])
-            else:
-                int_FDR_L_main = 1 / float(orf_id_to_int_FDR_L_main_T[orf_id])
-
-            if float(orf_id_to_int_FDR_L_uORF[orf_id]) > 0:
-                int_FDR_L_uORF = float(orf_id_to_int_FDR_L_uORF[orf_id]) / float(orf_id_to_int_FDR_L_uORF_T[orf_id])
-            else:
-                int_FDR_L_uORF = 1 / float(orf_id_to_int_FDR_L_uORF_T[orf_id])
-
-            if float(orf_id_to_int_FDR_L_ouORF[orf_id]) > 0:
-                int_FDR_L_ouORF = float(orf_id_to_int_FDR_L_ouORF[orf_id]) / float(orf_id_to_int_FDR_L_ouORF_T[orf_id])
-            else:
-                int_FDR_L_ouORF = 1 / float(orf_id_to_int_FDR_L_ouORF_T[orf_id])
+                A += 1
+            B += float(orf_id_to_int_FDR_L_all_T[orf_id])
 
             if float(orf_id_to_shu_FDR_L_all[orf_id]) > 0:
                 shu_FDR_L_all = float(orf_id_to_shu_FDR_L_all[orf_id]) / float(orf_id_to_shu_FDR_L_all_T[orf_id])
+                A += float(orf_id_to_shu_FDR_L_all[orf_id])
             else:
                 shu_FDR_L_all = 1 / float(orf_id_to_shu_FDR_L_all_T[orf_id])
-
-            if float(orf_id_to_shu_FDR_L_main[orf_id]) > 0:
-                shu_FDR_L_main = float(orf_id_to_shu_FDR_L_main[orf_id]) / float(orf_id_to_shu_FDR_L_main_T[orf_id])
-            else:
-                shu_FDR_L_main = 1 / float(orf_id_to_shu_FDR_L_main_T[orf_id])
-
-            if float(orf_id_to_shu_FDR_L_uORF[orf_id]) > 0:
-                shu_FDR_L_uORF = float(orf_id_to_shu_FDR_L_uORF[orf_id]) / float(orf_id_to_shu_FDR_L_uORF_T[orf_id])
-            else:
-                shu_FDR_L_uORF = 1 / float(orf_id_to_shu_FDR_L_uORF_T[orf_id])
-
-            if float(orf_id_to_shu_FDR_L_ouORF[orf_id]) > 0:
-                shu_FDR_L_ouORF = float(orf_id_to_shu_FDR_L_ouORF[orf_id]) / float(orf_id_to_shu_FDR_L_ouORF_T[orf_id])
-            else:
-                shu_FDR_L_ouORF = 1 / float(orf_id_to_shu_FDR_L_ouORF_T[orf_id])
+                A += 1
+            B += float(orf_id_to_shu_FDR_L_all_T[orf_id])
 
             max_FDR_L_all = max(int_FDR_L_all, shu_FDR_L_all)
+            merged_FDR_L_all = A / B
 
             transcript_id = orf.transcript_id
             UTR5_len = transcript_id_to_UTR5_len[transcript_id]
@@ -171,5 +135,5 @@ if __name__ == "__main__":
             elif gene_classification == "pseudogene":
                 orf_classification = "pseudogene"
 
-            lst_to_print = [orf_id, chrom, strand, orf_start, orf_end, orf.orf_type, orf_classification, orf.start_codon, orf.pep_len, int_FDR_L_all, int_FDR_L_main, int_FDR_L_uORF, int_FDR_L_ouORF, shu_FDR_L_all, shu_FDR_L_main, shu_FDR_L_uORF, shu_FDR_L_ouORF, max_FDR_L_all, transcript_id, orf.transcript_len, UTR5_len, CDS_len, UTR3_len, gene_id, gene_name, gene_type, gene_classification]
+            lst_to_print = [orf_id, chrom, strand, orf_start, orf_end, orf.orf_type, orf_classification, orf.start_codon, orf.pep_len, int_FDR_L_all, shu_FDR_L_all, max_FDR_L_all, merged_FDR_L_all, orf_id_to_int_FDR_L_all[orf_id], orf_id_to_int_FDR_L_all_T[orf_id], orf_id_to_shu_FDR_L_all[orf_id], orf_id_to_shu_FDR_L_all_T[orf_id], transcript_id, orf.transcript_len, UTR5_len, CDS_len, UTR3_len, gene_id, gene_name, gene_type, gene_classification]
             w.write("\t".join([str(_) for _ in lst_to_print]) + "\n")

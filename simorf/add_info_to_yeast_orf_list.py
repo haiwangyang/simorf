@@ -8,6 +8,8 @@ Example script:
 s=yeast
 python add_info_to_yeast_orf_list.py -s ${s} -olf list/${s}.orf_id.list.all -iff output/${s}.intFDRs.sim2000.txt -sff output/${s}.transFDRs.sim2000.txt -o output/${s}.FDRs.with_info.txt
 
+python add_info_to_yeast_orf_list.py -s ${s} -olf list/${s}.orf_id.updated -iff output/${s}.intFDRs.sim2000.updated.txt -sff output/${s}.transFDRs.sim2000.updated.txt -o output/${s}.FDRs.with_info.updated.txt
+
 Parameter description:
 s  = species
 olf  = orf list file

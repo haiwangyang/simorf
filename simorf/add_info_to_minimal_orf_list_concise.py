@@ -6,7 +6,9 @@ and add basic orf and transcript/gene info
 
 Example script:
 s=human
-python add_info_to_minimal_orf_list_concise.py -s $s -olf list/$s.orf_id.updated -iff output/$s.intFDRs.sim2000.updated.txt -sff output/$s.transFDRs.sim2000.updated.txt -o output/$s.FDRs.with_info.updated.txt
+s=mouse
+s=zebrafish
+python add_info_to_minimal_orf_list_concise.py -s $s -olf list/$s.orf_id.updated -iff output/$s.intFDRs.sim2000.updated.txt -sff output/$s.transFDRs.sim2000.updated.txt -o output/$s.FDRs.with_info.sim2000.updated.txt
 
 
 Parameter description:
